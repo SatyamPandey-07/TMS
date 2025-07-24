@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import Link from 'next/link';
-import { Eye, EyeOff, User, Mail, Lock, ArrowRight, Shield, CheckCircle, UserPlus } from 'lucide-react';
+impo          <div className="bg-white/95 dark:bg-white/10 rounded-xl p-6 border border-white/20 shadow-lg">t { Eye, EyeOff, User, Mail, Lock, ArrowRight, Shield, CheckCircle, UserPlus } from 'lucide-react';
 import ThemeToggle from '@/components/ThemeToggle';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -133,7 +133,7 @@ export default function RegisterPage() {
           </div>
 
           {/* Stats */}
-          <div className="bg-white/80 dark:bg-white/10 backdrop-blur-sm rounded-xl p-6 border border-white/20 shadow-lg">
+          <div className="bg-white/95 dark:bg-white/15 backdrop-blur-sm rounded-xl p-6 border border-white/20 shadow-lg">
             <h3 className="text-xl font-bold mb-4">Join Our Community</h3>
             <div className="grid grid-cols-3 gap-4">
               <div className="text-center">

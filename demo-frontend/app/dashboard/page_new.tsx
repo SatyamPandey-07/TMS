@@ -1,0 +1,372 @@
+'use client'
+
+import { motion } from 'framer-motion'
+import { useEffect, useState } from 'react'
+import { useSession } from 'next-auth/react'
+import { 
+  Calendar,
+  MapPin,
+  Clock,
+  Star,
+  Users,
+  Trophy,
+  Target,
+  Zap,
+  ArrowRight,
+  Activity,
+  Search,
+  TrendingUp,
+  Heart,
+  Bell,
+  Plus,
+  BarChart3
+} from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import { Card } from '@/components/ui/card'
+import { Badge } from '@/components/ui/badge'
+import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar'
+import DashboardLayout from '@/components/DashboardLayout'
+import Link from 'next/link'
+
+const fadeInUp = {
+  initial: { opacity: 0, y: 20 },
+  animate: { opacity: 1, y: 0 },
+  transition: { duration: 0.5 }
+}
+
+const staggerContainer = {
+  animate: {
+    transition: {
+      staggerChildren: 0.1
+    }
+  }
+}
+
+// Types for API data
+type Booking = {
+  _id: string;
+  turfId: {
+    _id: string;
+    name: string;
+    location: string;
+  };
+  slotId: {
+    date: string;
+    startHour: string;
+    endHour: string;
+  };
+  paymentreceived: string;
+  status: string;
+  createdAt: string;
+}
+
+type Turf = {
+  _id: string;
+  name: string;
+  location: string;
+  price: number;
+  sport: string;
+  rating?: number;
+  image?: string;
+}
+
+export default function DashboardPage() {
+  const { data: session } = useSession()
+  const [bookings, setBookings] = useState<Booking[]>([])
+  const [turfs, setTurfs] = useState<Turf[]>([])
+  const [loading, setLoading] = useState(true)
+  const [stats, setStats] = useState({
+    gamesPlayed: 0,
+    totalSpent: 0
+  })
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setLoading(true)
+        
+        // Fetch user's bookings
+        const bookingRes = await fetch('/api/fetch-booking')
+        const bookingData = await bookingRes.json()
+        
+        if (bookingData.bookings) {
+          setBookings(bookingData.bookings)
+          
+          // Calculate stats from bookings
+          const totalSpent = bookingData.bookings.reduce((sum: number, booking: Booking) => 
+            sum + parseFloat(booking.paymentreceived || '0'), 0
+          )
+          
+          setStats({
+            gamesPlayed: bookingData.bookings.length,
+            totalSpent: totalSpent
+          })
+        }
+
+        // Fetch all turfs for recommendations
+        const turfRes = await fetch('/api/all-turf')
+        const turfData = await turfRes.json()
+        
+        if (turfData.turfs) {
+          setTurfs(turfData.turfs.slice(0, 4)) // Show top 4 recommended turfs
+        }
+        
+      } catch (error) {
+        console.error('Error fetching dashboard data:', error)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    if (session) {
+      fetchData()
+    }
+  }, [session])
+
+  // Get upcoming bookings (future dates)
+  const upcomingBookings = bookings.filter(booking => {
+    const bookingDate = new Date(booking.slotId.date)
+    const today = new Date()
+    return bookingDate >= today
+  }).slice(0, 3) // Show max 3 upcoming
+
+  // Get recent activity (recent bookings)
+  const recentActivity = bookings
+    .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+    .slice(0, 5)
+    .map(booking => ({
+      id: booking._id,
+      message: `Booked ${booking.turfId.name} for ${new Date(booking.slotId.date).toLocaleDateString()}`,
+      time: new Date(booking.createdAt).toLocaleDateString()
+    }))
+
+  if (loading) {
+    return (
+      <DashboardLayout type="user">
+        <div className="flex items-center justify-center min-h-[400px]">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+        </div>
+      </DashboardLayout>
+    )
+  }
+
+  return (
+    <DashboardLayout type="user">
+      <motion.div
+        variants={staggerContainer}
+        initial="initial"
+        animate="animate"
+        className="space-y-8"
+      >
+        {/* Welcome Section */}
+        <motion.div variants={fadeInUp} className="bg-gradient-to-r from-blue-600 to-purple-600 dark:from-blue-800 dark:to-purple-800 text-white p-8 rounded-2xl shadow-xl">
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-3xl font-bold mb-2">Welcome back, {session?.user?.name || 'Player'}! 👋</h1>
+              <p className="text-lg opacity-90">Ready for your next game?</p>
+            </div>
+            <div className="hidden md:flex items-center gap-4">
+              <div className="text-center">
+                <div className="text-2xl font-bold">{stats.gamesPlayed}</div>
+                <div className="text-sm opacity-75">Games Played</div>
+              </div>
+              <div className="text-center">
+                <div className="text-2xl font-bold">₹{stats.totalSpent}</div>
+                <div className="text-sm opacity-75">Total Spent</div>
+              </div>
+            </div>
+          </div>
+        </motion.div>
+
+        {/* Quick Stats for Mobile */}
+        <motion.div variants={fadeInUp} className="md:hidden grid grid-cols-2 gap-4">
+          <Card className="p-6 text-center bg-white dark:bg-gray-800">
+            <div className="text-2xl font-bold text-blue-600">{stats.gamesPlayed}</div>
+            <div className="text-sm text-gray-600 dark:text-gray-400">Games Played</div>
+          </Card>
+          <Card className="p-6 text-center bg-white dark:bg-gray-800">
+            <div className="text-2xl font-bold text-green-600">₹{stats.totalSpent}</div>
+            <div className="text-sm text-gray-600 dark:text-gray-400">Total Spent</div>
+          </Card>
+        </motion.div>
+
+        <div className="grid lg:grid-cols-3 gap-8">
+          {/* Left Column - Main Content */}
+          <div className="lg:col-span-2 space-y-8">
+            {/* Upcoming Bookings */}
+            <motion.div variants={fadeInUp}>
+              <Card className="bg-white dark:bg-gray-800 shadow-lg">
+                <div className="p-6">
+                  <div className="flex items-center justify-between mb-6">
+                    <h2 className="text-xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
+                      <Calendar className="w-5 h-5 text-blue-600" />
+                      Upcoming Bookings
+                    </h2>
+                    <Link href="/bookings">
+                      <Button variant="outline" size="sm">
+                        View All
+                        <ArrowRight className="w-4 h-4 ml-1" />
+                      </Button>
+                    </Link>
+                  </div>
+                  
+                  <div className="space-y-4">
+                    {upcomingBookings.length === 0 ? (
+                      <div className="text-center py-8">
+                        <Calendar className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                        <p className="text-gray-500 dark:text-gray-400 mb-4">No upcoming bookings</p>
+                        <Link href="/explore">
+                          <Button>Book a Turf</Button>
+                        </Link>
+                      </div>
+                    ) : (
+                      upcomingBookings.map((booking) => (
+                        <div key={booking._id} className="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg">
+                          <div className="flex items-start justify-between">
+                            <div className="flex-1">
+                              <h3 className="font-semibold text-gray-900 dark:text-white">{booking.turfId.name}</h3>
+                              <div className="flex items-center gap-4 mt-2 text-sm text-gray-600 dark:text-gray-400">
+                                <div className="flex items-center gap-1">
+                                  <Calendar className="w-4 h-4" />
+                                  {new Date(booking.slotId.date).toLocaleDateString()}
+                                </div>
+                                <div className="flex items-center gap-1">
+                                  <Clock className="w-4 h-4" />
+                                  {booking.slotId.startHour} - {booking.slotId.endHour}
+                                </div>
+                                <div className="flex items-center gap-1">
+                                  <MapPin className="w-4 h-4" />
+                                  {booking.turfId.location}
+                                </div>
+                              </div>
+                            </div>
+                            <Badge variant={booking.status === 'confirmed' ? 'default' : 'secondary'}>
+                              {booking.status}
+                            </Badge>
+                          </div>
+                        </div>
+                      ))
+                    )}
+                  </div>
+                </div>
+              </Card>
+            </motion.div>
+
+            {/* Recommended Turfs */}
+            <motion.div variants={fadeInUp}>
+              <Card className="bg-white dark:bg-gray-800 shadow-lg">
+                <div className="p-6">
+                  <div className="flex items-center justify-between mb-6">
+                    <h2 className="text-xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
+                      <Star className="w-5 h-5 text-yellow-500" />
+                      Recommended Turfs
+                    </h2>
+                    <Link href="/explore">
+                      <Button variant="outline" size="sm">
+                        Explore All
+                        <ArrowRight className="w-4 h-4 ml-1" />
+                      </Button>
+                    </Link>
+                  </div>
+                  
+                  <div className="grid md:grid-cols-2 gap-4">
+                    {turfs.length === 0 ? (
+                      <div className="col-span-2 text-center py-8">
+                        <Search className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                        <p className="text-gray-500 dark:text-gray-400">No turfs available</p>
+                      </div>
+                    ) : (
+                      turfs.map((turf) => (
+                        <div key={turf._id} className="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg hover:shadow-md transition-shadow">
+                          <div className="aspect-video bg-gradient-to-r from-green-400 to-blue-500 rounded-lg mb-3 flex items-center justify-center">
+                            <span className="text-white text-2xl">⚽</span>
+                          </div>
+                          <h3 className="font-semibold text-gray-900 dark:text-white mb-1">{turf.name}</h3>
+                          <div className="flex items-center gap-1 text-sm text-gray-600 dark:text-gray-400 mb-2">
+                            <MapPin className="w-4 h-4" />
+                            {turf.location}
+                          </div>
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-1">
+                              <Star className="w-4 h-4 text-yellow-500" />
+                              <span className="text-sm font-medium">{turf.rating || '4.5'}</span>
+                            </div>
+                            <div className="text-lg font-bold text-green-600">₹{turf.price}</div>
+                          </div>
+                          <Link href={`/dashboard/user/turfs/${turf._id}`}>
+                            <Button className="w-full mt-3" size="sm">
+                              Book Now
+                            </Button>
+                          </Link>
+                        </div>
+                      ))
+                    )}
+                  </div>
+                </div>
+              </Card>
+            </motion.div>
+          </div>
+
+          {/* Right Column - Sidebar */}
+          <div className="space-y-8">
+            {/* Quick Actions */}
+            <motion.div variants={fadeInUp}>
+              <Card className="bg-white dark:bg-gray-800 shadow-lg">
+                <div className="p-6">
+                  <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4">Quick Actions</h3>
+                  <div className="space-y-3">
+                    <Link href="/explore">
+                      <Button variant="outline" className="w-full justify-start">
+                        <Search className="w-4 h-4 mr-2" />
+                        Find Turfs
+                      </Button>
+                    </Link>
+                    <Link href="/bookings">
+                      <Button variant="outline" className="w-full justify-start">
+                        <Calendar className="w-4 h-4 mr-2" />
+                        My Bookings
+                      </Button>
+                    </Link>
+                    <Link href="/tournaments">
+                      <Button variant="outline" className="w-full justify-start">
+                        <Trophy className="w-4 h-4 mr-2" />
+                        Tournaments
+                      </Button>
+                    </Link>
+                  </div>
+                </div>
+              </Card>
+            </motion.div>
+
+            {/* Recent Activity */}
+            <motion.div variants={fadeInUp}>
+              <Card className="bg-white dark:bg-gray-800 shadow-lg">
+                <div className="p-6">
+                  <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+                    <Activity className="w-5 h-5 text-blue-600" />
+                    Recent Activity
+                  </h3>
+                  <div className="space-y-3">
+                    {recentActivity.length === 0 ? (
+                      <p className="text-gray-500 dark:text-gray-400 text-sm">No recent activity</p>
+                    ) : (
+                      recentActivity.map((activity) => (
+                        <div key={activity.id} className="flex gap-3">
+                          <div className="w-2 h-2 bg-blue-600 rounded-full mt-2 flex-shrink-0"></div>
+                          <div className="flex-1">
+                            <p className="text-sm text-gray-900 dark:text-white">{activity.message}</p>
+                            <p className="text-xs text-gray-500 dark:text-gray-400">{activity.time}</p>
+                          </div>
+                        </div>
+                      ))
+                    )}
+                  </div>
+                </div>
+              </Card>
+            </motion.div>
+          </div>
+        </div>
+      </motion.div>
+    </DashboardLayout>
+  )
+}

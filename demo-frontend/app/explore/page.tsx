@@ -140,7 +140,7 @@ export default function ExplorePage() {
           variants={fadeInUp}
           className="mb-8"
         >
-          <Card className="p-6 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm">
+                    <Card className="p-6 bg-white/95 dark:bg-gray-800/95">
             <div className="flex flex-col lg:flex-row gap-4">
               {/* Search Bar */}
               <div className="flex-1 relative">

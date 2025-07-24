@@ -6,7 +6,8 @@ export interface Turf{
     name: string,
     location:string,
     ownerId: { type: Schema.Types.ObjectId, ref: 'Owner' },
-    priceBase: Number,
+    pricePerHour: Number,
+    sport: string,
     openHour: Number,    // e.g. 6
     closeHour: Number,   // e.g. 22
     lunchBreak: {
@@ -23,8 +24,6 @@ export interface Turf{
     _id?: mongoose.Types.ObjectId,
     createdAt?: Date,
     updatedAt?: Date,
-
-
 }
 
 const TurfSchema = new Schema<Turf>(
@@ -39,8 +38,12 @@ const TurfSchema = new Schema<Turf>(
         required: true
        },
        ownerId: { type: Schema.Types.ObjectId, ref: 'Owner' },
-         priceBase: {
+         pricePerHour: {
             type: Number,
+            required: true
+        },
+        sport: {
+            type: String,
             required: true
         },
          openHour: {

@@ -41,7 +41,7 @@ export function ModernTurfCard({ turf, onBook }: TurfCardProps) {
           
           {/* Rating Badge */}
           {turf.rating && (
-            <div className="absolute top-3 left-3 bg-white/90 backdrop-blur-sm rounded-full px-2 py-1 flex items-center gap-1">
+            <div className="absolute top-3 left-3 bg-white/95 backdrop-blur-sm rounded-full px-2 py-1 flex items-center gap-1">
               <Star className="w-3 h-3 fill-yellow-400 text-yellow-400" />
               <span className="text-xs font-medium">{turf.rating}</span>
             </div>
