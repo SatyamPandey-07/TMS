@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { 
   UserIcon, 
@@ -20,6 +20,7 @@ import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
+import { useSession } from 'next-auth/react';
 
 interface UserStats {
   totalBookings: number;
@@ -40,51 +41,93 @@ interface RecentActivity {
 }
 
 export default function ProfilePage() {
+  const { data: session, status } = useSession();
   const [isEditing, setIsEditing] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
   const [userInfo, setUserInfo] = useState({
-    name: 'John Doe',
-    email: 'john.doe@example.com',
-    phone: '+91 9876543210',
-    location: 'Mumbai, Maharashtra',
-    bio: 'Passionate cricket player and sports enthusiast. Love playing at different turfs around the city!',
+    name: '',
+    email: '',
+    phone: '',
     avatar: '/api/placeholder/150/150'
   });
 
-  const [stats] = useState<UserStats>({
-    totalBookings: 47,
-    gamesPlayed: 42,
-    totalSpent: 15500,
-    favoriteSpot: 'Elite Sports Arena',
-    joinDate: 'March 2023',
-    achievements: ['Early Bird', 'Regular Player', 'Sports Enthusiast', 'Team Captain']
+  const [stats, setStats] = useState<UserStats>({
+    totalBookings: 0,
+    gamesPlayed: 0,
+    totalSpent: 0,
+    favoriteSpot: '',
+    joinDate: '',
+    achievements: []
   });
 
-  const [recentActivities] = useState<RecentActivity[]>([
-    {
-      id: '1',
-      type: 'booking',
-      title: 'Booked Cricket Ground',
-      description: 'Elite Sports Arena for December 25, 2024',
-      date: '2 hours ago',
-      turf: 'Elite Sports Arena'
-    },
-    {
-      id: '2',
-      type: 'game',
-      title: 'Completed Game',
-      description: 'Had an amazing match with the team',
-      date: '1 day ago',
-      turf: 'Champions Ground'
-    },
-    {
-      id: '3',
-      type: 'review',
-      title: 'Left a Review',
-      description: 'Gave 5 stars to Sports Paradise',
-      date: '3 days ago',
-      turf: 'Sports Paradise'
+  const [recentActivities, setRecentActivities] = useState<RecentActivity[]>([]);
+
+  // Load user info from session first, then fetch additional data
+  useEffect(() => {
+    if (status === 'loading') return; // Still loading session
+    
+    if (session?.user) {
+      // Set user info from session immediately
+      setUserInfo({
+        name: session.user.name || '',
+        email: session.user.email || '',
+        phone: '', // Will be fetched from API
+        avatar: '/api/placeholder/150/150'
+      });
     }
-  ]);
+  }, [session, status]);
+
+  // Fetch user profile data from API
+  useEffect(() => {
+    const fetchProfile = async () => {
+      if (!session?.user) {
+        setLoading(false);
+        return;
+      }
+
+      try {
+        const response = await fetch('/api/user/profile');
+        if (response.ok) {
+          const data = await response.json();
+          
+          // Update user info with data from API, but keep session data as primary source
+          setUserInfo(prev => ({
+            ...prev,
+            name: session.user.name || prev.name,
+            email: session.user.email || prev.email,
+            phone: data.user.phone || prev.phone,
+            avatar: '/api/placeholder/150/150'
+          }));
+          
+          setStats(data.stats);
+          setRecentActivities(data.recentActivities);
+        } else {
+          console.error('Failed to fetch profile data');
+          // If API fails, still show session data
+          setUserInfo(prev => ({
+            ...prev,
+            name: session.user.name || prev.name,
+            email: session.user.email || prev.email,
+          }));
+        }
+      } catch (error) {
+        console.error('Error fetching profile:', error);
+        // If API fails, still show session data
+        setUserInfo(prev => ({
+          ...prev,
+          name: session.user.name || prev.name,
+          email: session.user.email || prev.email,
+        }));
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (session?.user && status === 'authenticated') {
+      fetchProfile();
+    }
+  }, [session, status]);
 
   const getActivityIcon = (type: string) => {
     switch (type) {
@@ -99,11 +142,70 @@ export default function ProfilePage() {
     }
   };
 
-  const handleSave = () => {
-    setIsEditing(false);
-    // Here you would typically save to backend
-    console.log('Saving user info:', userInfo);
+  const handleSave = async () => {
+    if (!userInfo.name.trim()) {
+      alert('Name is required');
+      return;
+    }
+
+    setSaving(true);
+    try {
+      const response = await fetch('/api/user/profile', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          name: userInfo.name.trim(),
+          phone: userInfo.phone.trim()
+        }),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setUserInfo(prev => ({
+          ...prev,
+          name: data.user.name,
+          phone: data.user.phone
+        }));
+        setIsEditing(false);
+        alert('Profile updated successfully!');
+      } else {
+        const error = await response.json();
+        alert(error.error || 'Failed to update profile');
+      }
+    } catch (error) {
+      console.error('Error updating profile:', error);
+      alert('Failed to update profile');
+    } finally {
+      setSaving(false);
+    }
   };
+
+  if (status === 'loading' || loading) {
+    return (
+      <DashboardLayout type="user">
+        <div className="flex items-center justify-center min-h-[400px]">
+          <div className="text-center">
+            <div className="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+            <p className="text-gray-600 dark:text-gray-400">Loading profile...</p>
+          </div>
+        </div>
+      </DashboardLayout>
+    );
+  }
+
+  if (!session) {
+    return (
+      <DashboardLayout type="user">
+        <div className="flex items-center justify-center min-h-[400px]">
+          <div className="text-center">
+            <p className="text-gray-600 dark:text-gray-400">Please log in to view your profile.</p>
+          </div>
+        </div>
+      </DashboardLayout>
+    );
+  }
 
   return (
     <DashboardLayout type="user">
@@ -180,8 +282,14 @@ export default function ProfilePage() {
                     size="sm"
                     onClick={() => isEditing ? handleSave() : setIsEditing(true)}
                     className="sparkle dark:glow"
+                    disabled={saving}
                   >
-                    {isEditing ? (
+                    {saving ? (
+                      <>
+                        <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin mr-2"></div>
+                        Saving...
+                      </>
+                    ) : isEditing ? (
                       'Save Changes'
                     ) : (
                       <>
@@ -205,9 +313,10 @@ export default function ProfilePage() {
                           value={userInfo.name}
                           onChange={(e) => setUserInfo(prev => ({ ...prev, name: e.target.value }))}
                           className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:text-white"
+                          placeholder="Enter your full name"
                         />
                       ) : (
-                        <p className="text-gray-900 dark:text-white font-medium">{userInfo.name}</p>
+                        <p className="text-gray-900 dark:text-white font-medium">{userInfo.name || 'Not provided'}</p>
                       )}
                     </div>
 
@@ -216,16 +325,8 @@ export default function ProfilePage() {
                         <EnvelopeIcon className="w-4 h-4" />
                         Email
                       </label>
-                      {isEditing ? (
-                        <input
-                          type="email"
-                          value={userInfo.email}
-                          onChange={(e) => setUserInfo(prev => ({ ...prev, email: e.target.value }))}
-                          className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:text-white"
-                        />
-                      ) : (
-                        <p className="text-gray-900 dark:text-white font-medium">{userInfo.email}</p>
-                      )}
+                      <p className="text-gray-900 dark:text-white font-medium">{userInfo.email}</p>
+                      <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Email cannot be changed</p>
                     </div>
                   </div>
 
@@ -241,45 +342,13 @@ export default function ProfilePage() {
                           value={userInfo.phone}
                           onChange={(e) => setUserInfo(prev => ({ ...prev, phone: e.target.value }))}
                           className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:text-white"
+                          placeholder="Enter your phone number"
                         />
                       ) : (
-                        <p className="text-gray-900 dark:text-white font-medium">{userInfo.phone}</p>
-                      )}
-                    </div>
-
-                    <div>
-                      <label className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                        <MapPinIcon className="w-4 h-4" />
-                        Location
-                      </label>
-                      {isEditing ? (
-                        <input
-                          type="text"
-                          value={userInfo.location}
-                          onChange={(e) => setUserInfo(prev => ({ ...prev, location: e.target.value }))}
-                          className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:text-white"
-                        />
-                      ) : (
-                        <p className="text-gray-900 dark:text-white font-medium">{userInfo.location}</p>
+                        <p className="text-gray-900 dark:text-white font-medium">{userInfo.phone || 'Not provided'}</p>
                       )}
                     </div>
                   </div>
-                </div>
-
-                <div className="mt-6">
-                  <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">
-                    Bio
-                  </label>
-                  {isEditing ? (
-                    <textarea
-                      value={userInfo.bio}
-                      onChange={(e) => setUserInfo(prev => ({ ...prev, bio: e.target.value }))}
-                      rows={3}
-                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:text-white"
-                    />
-                  ) : (
-                    <p className="text-gray-600 dark:text-gray-400">{userInfo.bio}</p>
-                  )}
                 </div>
               </div>
             </div>

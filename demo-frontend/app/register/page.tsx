@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import Link from 'next/link';
-impo          <div className="bg-white/95 dark:bg-white/10 rounded-xl p-6 border border-white/20 shadow-lg">t { Eye, EyeOff, User, Mail, Lock, ArrowRight, Shield, CheckCircle, UserPlus } from 'lucide-react';
+import { Eye, EyeOff, User, Mail, Lock, ArrowRight, Shield, CheckCircle, UserPlus } from 'lucide-react';
 import ThemeToggle from '@/components/ThemeToggle';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';

@@ -37,9 +37,6 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     
     if (newTheme === 'dark') {
       root.classList.add('dark')
-      body.classList.add('glow', 'theme-transition')
-    } else {
-      body.classList.add('sparkle', 'theme-transition')
     }
     
     // Add smooth transition
@@ -54,40 +51,6 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     setTheme(newTheme)
     applyTheme(newTheme)
     localStorage.setItem('theme', newTheme)
-    
-    // Add a little celebration effect
-    if (newTheme === 'light') {
-      // Sparkle burst effect
-      createSparkleEffect()
-    } else {
-      // Glitch effect
-      createGlitchEffect()
-    }
-  }
-
-  const createSparkleEffect = () => {
-    for (let i = 0; i < 10; i++) {
-      const sparkle = document.createElement('div')
-      sparkle.innerHTML = '✨'
-      sparkle.style.position = 'fixed'
-      sparkle.style.left = Math.random() * window.innerWidth + 'px'
-      sparkle.style.top = Math.random() * window.innerHeight + 'px'
-      sparkle.style.fontSize = '1.5rem'
-      sparkle.style.pointerEvents = 'none'
-      sparkle.style.zIndex = '9999'
-      sparkle.style.animation = 'sparkle 2s ease-out forwards'
-      document.body.appendChild(sparkle)
-      
-      setTimeout(() => sparkle.remove(), 2000)
-    }
-  }
-
-  const createGlitchEffect = () => {
-    const body = document.body
-    body.style.animation = 'glitch 0.5s ease-out'
-    setTimeout(() => {
-      body.style.animation = ''
-    }, 500)
   }
 
   return (
