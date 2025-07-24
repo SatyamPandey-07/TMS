@@ -16,19 +16,19 @@ type Booking = {
     _id: string;
     name: string;
     location: string;
-  };
+  } | null;
   slotId: {
     date: string;
     startHour: string;
     endHour: string;
-  };
+  } | null;
   paymentreceived: string;
   status: string;
   createdAt: string;
   userId: {
     name: string;
     email: string;
-  };
+  } | null;
 };
 
 type Turf = {
@@ -71,21 +71,26 @@ export default function OwnerDashboardPage() {
         const bookingData = await bookingRes.json();
         
         if (bookingData.bookings) {
-          setBookings(bookingData.bookings);
+          // Filter out bookings with null slotId or turfId
+          const validBookings = bookingData.bookings.filter((booking: Booking) => 
+            booking.slotId && booking.turfId
+          );
+          
+          setBookings(validBookings);
           
           // Calculate stats
-          const totalRevenue = bookingData.bookings.reduce((sum: number, booking: Booking) => 
+          const totalRevenue = validBookings.reduce((sum: number, booking: Booking) => 
             sum + parseFloat(booking.paymentreceived || '0'), 0
           );
           
           const today = new Date().toDateString();
-          const todayBookings = bookingData.bookings.filter((booking: Booking) => 
+          const todayBookings = validBookings.filter((booking: Booking) => 
             new Date(booking.createdAt).toDateString() === today
           ).length;
           
           setStats({
             totalRevenue,
-            totalBookings: bookingData.bookings.length,
+            totalBookings: validBookings.length,
             activeTurfs: turfData.turfs?.length || 0,
             todayBookings
           });
@@ -103,10 +108,19 @@ export default function OwnerDashboardPage() {
     }
   }, [session]);
 
-  // Get upcoming bookings (future dates)
+  console.log(bookings);
+
+  // Get upcoming bookings (future dates) with null checks
   const upcomingBookings = bookings
-    .filter(booking => new Date(booking.slotId.date) >= new Date())
-    .sort((a, b) => new Date(a.slotId.date).getTime() - new Date(b.slotId.date).getTime())
+    .filter(booking => 
+      booking.slotId && 
+      booking.slotId.date && 
+      new Date(booking.slotId.date) >= new Date()
+    )
+    .sort((a, b) => {
+      if (!a.slotId?.date || !b.slotId?.date) return 0;
+      return new Date(a.slotId.date).getTime() - new Date(b.slotId.date).getTime();
+    })
     .slice(0, 5);
 
   if (loading) {
@@ -141,7 +155,17 @@ export default function OwnerDashboardPage() {
         transition={{ duration: 0.6, delay: 0.1 }}
         className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8"
       >
-        
+        <Card className="p-6 bg-white dark:bg-gray-800">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Total Revenue</p>
+              <p className="text-2xl font-bold text-gray-900 dark:text-white">₹{stats.totalRevenue.toLocaleString()}</p>
+            </div>
+            <div className="w-8 h-8 bg-green-100 dark:bg-green-900 rounded-lg flex items-center justify-center">
+              <DollarSign className="w-4 h-4 text-green-600 dark:text-green-400" />
+            </div>
+          </div>
+        </Card>
 
         <Card className="p-6 bg-white dark:bg-gray-800">
           <div className="flex items-center justify-between">
@@ -212,8 +236,12 @@ export default function OwnerDashboardPage() {
                       <div key={booking._id} className="border border-gray-200 dark:border-gray-700 p-4 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
                         <div className="flex justify-between items-start mb-2">
                           <div>
-                            <h3 className="font-semibold text-gray-900 dark:text-white">{booking.turfId.name}</h3>
-                            <p className="text-sm text-gray-600 dark:text-gray-400">Customer: {booking.userId?.name || 'N/A'}</p>
+                            <h3 className="font-semibold text-gray-900 dark:text-white">
+                              {booking.turfId?.name || 'Unknown Turf'}
+                            </h3>
+                            <p className="text-sm text-gray-600 dark:text-gray-400">
+                              Customer: {booking.userId?.name || 'N/A'}
+                            </p>
                           </div>
                           <Badge variant={booking.status === 'confirmed' ? 'default' : 'secondary'}>
                             {booking.status}
@@ -222,13 +250,13 @@ export default function OwnerDashboardPage() {
                         <div className="flex items-center gap-4 text-sm text-gray-600 dark:text-gray-400">
                           <div className="flex items-center gap-1">
                             <Calendar className="w-4 h-4" />
-                            {new Date(booking.slotId.date).toLocaleDateString()}
+                            {booking.slotId?.date ? new Date(booking.slotId.date).toLocaleDateString() : 'No date'}
                           </div>
                           <div className="flex items-center gap-1">
                             <Clock className="w-4 h-4" />
-                            {booking.slotId.startHour} - {booking.slotId.endHour}
+                            {booking.slotId?.startHour || 'N/A'} - {booking.slotId?.endHour || 'N/A'}
                           </div>
-                          <div className="ml-auto font-semibold text-green-600">₹{booking.paymentreceived}</div>
+                          <div className="ml-auto font-semibold text-green-600">₹{booking.paymentreceived || '0'}</div>
                         </div>
                       </div>
                     ))}

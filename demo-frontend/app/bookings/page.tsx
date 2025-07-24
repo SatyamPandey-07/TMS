@@ -5,10 +5,13 @@ import { motion } from 'framer-motion';
 import Link from 'next/link';
 import { Calendar, MapPin, Clock, CheckCircle, X, RefreshCw } from 'lucide-react';
 import DashboardLayout from '@/components/DashboardLayout';
+import { Button } from '@/components/ui/button';
+import { useRouter } from 'next/navigation';
 
 interface Booking {
   _id: string;
   turfId: {
+    _id: string,
     name: string;
     location: string;
     pricebase?: string;
@@ -29,12 +32,15 @@ export default function BookingsPage() {
   const [activeTab, setActiveTab] = useState<'open' | 'closed'>('open'); // Changed from 'upcoming' | 'past'
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [loading, setLoading] = useState(true);
+  const router = useRouter()
 
   useEffect(() => {
     const fetchBookings = async () => {
       try {
         const res = await fetch('/api/fetch-booking-user');
         const data = await res.json();
+        console.log(data.bookings);
+        
         setBookings(data.bookings || []);
       } catch (err) {
         console.error('Failed to fetch bookings:', err);
@@ -98,6 +104,20 @@ export default function BookingsPage() {
       }
     };
 
+    const handleBookAgain = async(bookingId: string) => {
+      const booking = bookings.find(b => b._id === bookingId);
+  
+      if (!booking) {
+        console.error('Booking not found');
+        return;
+      }
+      
+      // Extract the turfId from the booking
+      const turfId = booking.turfId._id;
+
+      router.push(`/dashboard/user/turfs/${turfId}`)
+    }
+
     return (
       <div key={booking._id} className={`bg-white rounded-xl shadow-lg p-6 border-l-4 ${isClosed ? 'border-gray-300' : 'border-blue-500'}`}>
         <div className="flex items-start justify-between mb-4">
@@ -138,15 +158,11 @@ export default function BookingsPage() {
         <div className="flex gap-3">
           {isClosed ? (
             <>
-              <button className="flex-1 bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors">
+            
+              <Button onClick={() => {handleBookAgain(booking._id)}} className="flex-1 bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors">
                 Book Again
-              </button>
-              <button className="flex-1 bg-gray-100 text-gray-700 py-2 px-4 rounded-lg hover:bg-gray-200 transition-colors">
-                Write Review
-              </button>
-              <button className="bg-green-100 text-green-600 py-2 px-4 rounded-lg hover:bg-green-200 transition-colors">
-                Download Receipt
-              </button>
+              </Button>
+             
             </>
           ) : (
             <>

@@ -2,6 +2,7 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useRouter } from 'next/navigation';
 import { 
   PaperAirplaneIcon, 
   UserIcon,
@@ -23,75 +24,6 @@ interface ChatbotWindowProps {
   onClose: () => void;
 }
 
-const PREDEFINED_RESPONSES = {
-  greeting: [
-    "Hello! 👋 Welcome to TurfMaster! I'm here to help you find and book the perfect turf for your game.",
-    "Hi there! 🏟️ I'm your TurfMaster assistant. How can I help you today?",
-    "Welcome! I can help you with turf bookings, finding locations, pricing, and more!"
-  ],
-  booking: [
-    "I'd be happy to help you with booking! You can:",
-    "• Browse available turfs in the 'Explore' section",
-    "• Filter by sport type, location, and price",
-    "• Check real-time availability", 
-    "• Book instantly with advance payment",
-    "",
-    "Would you like me to guide you to the booking page?"
-  ],
-  pricing: [
-    "Our turf pricing varies by location and facilities:",
-    "• Football turfs: ₹600-₹1200 per hour",
-    "• Cricket grounds: ₹800-₹1500 per hour", 
-    "• Badminton courts: ₹400-₹800 per hour",
-    "• Basketball courts: ₹500-₹900 per hour",
-    "",
-    "Prices may vary based on peak hours and location. Check specific turf pages for exact pricing!"
-  ],
-  location: [
-    "We have turfs available in many locations:",
-    "• Delhi NCR (Noida, Gurgaon, Delhi)",
-    "• Mumbai (Andheri, Borivali, Thane)",
-    "• Bangalore (Koramangala, Whitefield, BTM)",
-    "• Pune (Hinjewadi, Kothrud, Aundh)",
-    "",
-    "Use our location filter to find turfs near you!"
-  ],
-  hours: [
-    "Most turfs are available:",
-    "• Morning: 6:00 AM - 11:00 AM",
-    "• Evening: 4:00 PM - 10:00 PM", 
-    "• Some 24/7 facilities available",
-    "",
-    "Note: Lunch breaks typically from 12-2 PM. Check individual turf timings for exact hours!"
-  ],
-  payment: [
-    "Payment is easy and secure:",
-    "• Advance payment (usually 50%) required to confirm booking",
-    "• Accepted methods: UPI, Credit/Debit Cards, Net Banking",
-    "• Remaining amount can be paid at the turf",
-    "• Digital receipts provided instantly",
-    "",
-    "All payments are secured with 256-bit encryption!"
-  ],
-  cancellation: [
-    "Our cancellation policy:",
-    "• Free cancellation up to 24 hours before booking",
-    "• 50% refund for cancellations 6-24 hours before",
-    "• No refund for cancellations within 6 hours",
-    "",
-    "Weather-related cancellations are handled case-by-case with full refund eligibility."
-  ],
-  contact: [
-    "Need to get in touch?",
-    "• Email: support@turfmaster.com",
-    "• Phone: +91 9876543210",
-    "• Live Chat: Right here! 😊",
-    "• Support Hours: 9 AM - 9 PM",
-    "",
-    "I'm available 24/7 for basic queries!"
-  ]
-};
-
 const QUICK_REPLIES = [
   "Find football turfs",
   "Cricket grounds near me", 
@@ -103,10 +35,11 @@ const QUICK_REPLIES = [
 ];
 
 export default function ChatbotWindow({ isOpen, onClose }: ChatbotWindowProps) {
+  const router = useRouter();
   const [messages, setMessages] = useState<Message[]>([
     {
       id: '1',
-      text: PREDEFINED_RESPONSES.greeting[0],
+      text: "Hello! 👋 Welcome to TurfMaster! I'm here to help you find and book the perfect turf for your game.",
       sender: 'bot',
       timestamp: new Date()
     }
@@ -124,11 +57,7 @@ export default function ChatbotWindow({ isOpen, onClose }: ChatbotWindowProps) {
     scrollToBottom();
   }, [messages]);
 
-  const getRandomResponse = (responses: string[]) => {
-    return responses[Math.floor(Math.random() * responses.length)];
-  };
-
-  const getBotResponse = async (userMessage: string): Promise<string[]> => {
+  const getBotResponse = async (userMessage: string): Promise<any> => {
     try {
       const response = await fetch('/api/chatbot', {
         method: 'POST',
@@ -140,58 +69,18 @@ export default function ChatbotWindow({ isOpen, onClose }: ChatbotWindowProps) {
 
       if (response.ok) {
         const data = await response.json();
-        return [data.response];
+        return data;
       } else {
-        // Fallback to local responses if API fails
-        return getLocalBotResponse(userMessage);
+        throw new Error('API request failed');
       }
     } catch (error) {
       console.error('Chatbot API error:', error);
-      // Fallback to local responses
-      return getLocalBotResponse(userMessage);
+      return {
+        type: 'message',
+        response: "Sorry! I'm having trouble understanding your request. Please try again later.",
+        timestamp: new Date().toISOString()
+      };
     }
-  };
-
-  const getLocalBotResponse = (userMessage: string): string[] => {
-    const message = userMessage.toLowerCase();
-    
-    if (message.includes('book') || message.includes('booking') || message.includes('reserve')) {
-      return PREDEFINED_RESPONSES.booking;
-    }
-    if (message.includes('price') || message.includes('cost') || message.includes('fee') || message.includes('rate')) {
-      return PREDEFINED_RESPONSES.pricing;
-    }
-    if (message.includes('location') || message.includes('where') || message.includes('near') || message.includes('area')) {
-      return PREDEFINED_RESPONSES.location;
-    }
-    if (message.includes('time') || message.includes('hour') || message.includes('timing') || message.includes('open')) {
-      return PREDEFINED_RESPONSES.hours;
-    }
-    if (message.includes('payment') || message.includes('pay') || message.includes('money') || message.includes('card')) {
-      return PREDEFINED_RESPONSES.payment;
-    }
-    if (message.includes('cancel') || message.includes('refund') || message.includes('policy')) {
-      return PREDEFINED_RESPONSES.cancellation;
-    }
-    if (message.includes('contact') || message.includes('support') || message.includes('help') || message.includes('phone') || message.includes('email')) {
-      return PREDEFINED_RESPONSES.contact;
-    }
-    if (message.includes('hello') || message.includes('hi') || message.includes('hey') || message.includes('start')) {
-      return [getRandomResponse(PREDEFINED_RESPONSES.greeting)];
-    }
-    
-    return [
-      "I'm here to help with turf bookings! Here are some things I can assist you with:",
-      "",
-      "🏟️ Turf booking process",
-      "💰 Pricing information", 
-      "📍 Available locations",
-      "⏰ Timing and hours",
-      "💳 Payment methods",
-      "📞 Contact support",
-      "",
-      "Just ask me about any of these topics!"
-    ];
   };
 
   const simulateTyping = (callback: () => void | Promise<void>, delay = 1000) => {
@@ -219,14 +108,32 @@ export default function ChatbotWindow({ isOpen, onClose }: ChatbotWindowProps) {
 
     // Get bot response
     simulateTyping(async () => {
-      const responses = await getBotResponse(text);
+      const botResponse = await getBotResponse(text);
+      
+      // Add bot message to chat
       const botMessage: Message = {
         id: (Date.now() + 1).toString(),
-        text: responses.join('\n'),
+        text: botResponse.response,
         sender: 'bot',
         timestamp: new Date()
       };
       setMessages(prev => [...prev, botMessage]);
+
+      // Handle redirect responses
+      if (botResponse.type === 'redirect' && botResponse.action === 'book_turf') {
+        // Redirect after a short delay to let user read the message
+        setTimeout(() => {
+          router.push(botResponse.redirectUrl);
+          onClose(); // Close chatbot when redirecting
+        }, 2000);
+      }
+
+      // Handle selection responses (multiple turf options)
+      if (botResponse.type === 'selection' && botResponse.action === 'choose_turf') {
+        // You can enhance this later to show clickable options
+        // For now, it will just display the options as text
+        console.log('Multiple turf options:', botResponse.options);
+      }
     });
   };
 
