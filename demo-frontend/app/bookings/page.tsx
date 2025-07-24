@@ -1,14 +1,23 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import Link from 'next/link';
-import { Calendar, MapPin, Clock, CheckCircle, X, RefreshCw } from 'lucide-react';
+import { Calendar, MapPin, Clock, CheckCircle, X, RefreshCw, Star, Download, Send } from 'lucide-react';
 import DashboardLayout from '@/components/DashboardLayout';
 import Chatbot from '@/components/Chatbot';
+import ReviewModal from '@/components/ReviewModal';
+import { useReview } from '@/hooks/useReview';
 
 export default function BookingsPage() {
   const [activeTab, setActiveTab] = useState('upcoming');
+  const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
+  const [selectedBooking, setSelectedBooking] = useState<any>(null);
+  const [reviewStatuses, setReviewStatuses] = useState<Record<string, any>>({});
+  
+  const { 
+    checkReviewStatus
+  } = useReview();
 
   const upcomingBookings = [
     {
@@ -34,7 +43,9 @@ export default function BookingsPage() {
   const pastBookings = [
     {
       id: 3,
+      _id: "668190a034c4c28e75c81780",
       turf: "Elite Sports Complex",
+      turfId: "668190a034c4c28e75c81781",
       date: "Jul 20, 2025",
       time: "6:00 PM - 8:00 PM",
       location: "Powai, Mumbai",
@@ -43,7 +54,9 @@ export default function BookingsPage() {
     },
     {
       id: 4,
+      _id: "668190a034c4c28e75c81782",
       turf: "Royal Tennis Courts",
+      turfId: "668190a034c4c28e75c81783",
       date: "Jul 15, 2025",
       time: "5:00 PM - 6:00 PM",
       location: "Juhu, Mumbai",
@@ -51,6 +64,68 @@ export default function BookingsPage() {
       status: "completed"
     }
   ];
+
+  // Load review statuses when component mounts or when past bookings are shown
+  useEffect(() => {
+    if (activeTab === 'past') {
+      pastBookings.forEach(async (booking) => {
+        try {
+          const status = await checkReviewStatus(booking._id);
+          setReviewStatuses(prev => ({
+            ...prev,
+            [booking._id]: status
+          }));
+        } catch (error) {
+          // If API fails, just log error and continue - review button will still show
+          console.error('Error checking review status:', error);
+        }
+      });
+    }
+  }, [activeTab]);
+
+  const handleWriteReview = (booking: any) => {
+    setSelectedBooking(booking);
+    setIsReviewModalOpen(true);
+  };
+
+  const handleDownloadReceipt = async (bookingId: string) => {
+    try {
+      const response = await fetch(`/api/receipts/download?bookingId=${bookingId}`);
+      if (!response.ok) throw new Error('Failed to download receipt');
+      
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `receipt-${bookingId}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+    } catch (error) {
+      console.error('Error downloading receipt:', error);
+    }
+  };
+
+  const handleResendReceipt = async (bookingId: string) => {
+    try {
+      const response = await fetch('/api/receipts/resend', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ bookingId }),
+      });
+      
+      if (!response.ok) throw new Error('Failed to resend receipt');
+      
+      // Show success message (you can use a toast notification here)
+      alert('Receipt sent to your email successfully!');
+    } catch (error) {
+      console.error('Error resending receipt:', error);
+      alert('Failed to send receipt. Please try again.');
+    }
+  };
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -164,48 +239,112 @@ export default function BookingsPage() {
             animate={{ opacity: 1, y: 0 }}
             className="space-y-6"
           >
-            {pastBookings.map((booking) => (
-              <div key={booking.id} className="bg-white rounded-xl shadow-lg p-6 border-l-4 border-gray-300">
-                <div className="flex items-start justify-between mb-4">
-                  <div>
-                    <h3 className="text-xl font-bold text-gray-800 mb-2">{booking.turf}</h3>
-                    <div className="flex items-center gap-4 text-gray-600">
-                      <div className="flex items-center gap-1">
-                        <Calendar className="w-4 h-4" />
-                        <span>{booking.date}</span>
+            {pastBookings.map((booking) => {
+              const bookingReviewStatus = reviewStatuses[booking._id];
+              const hasReview = bookingReviewStatus?.hasReview || false;
+
+              return (
+                <div key={booking.id} className="bg-white rounded-xl shadow-lg p-6 border-l-4 border-gray-300">
+                  <div className="flex items-start justify-between mb-4">
+                    <div>
+                      <h3 className="text-xl font-bold text-gray-800 mb-2">{booking.turf}</h3>
+                      <div className="flex items-center gap-4 text-gray-600">
+                        <div className="flex items-center gap-1">
+                          <Calendar className="w-4 h-4" />
+                          <span>{booking.date}</span>
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <Clock className="w-4 h-4" />
+                          <span>{booking.time}</span>
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <MapPin className="w-4 h-4" />
+                          <span>{booking.location}</span>
+                        </div>
                       </div>
-                      <div className="flex items-center gap-1">
-                        <Clock className="w-4 h-4" />
-                        <span>{booking.time}</span>
-                      </div>
-                      <div className="flex items-center gap-1">
-                        <MapPin className="w-4 h-4" />
-                        <span>{booking.location}</span>
-                      </div>
+                      
+                      {/* Show existing review if available */}
+                      {hasReview && bookingReviewStatus.review && (
+                        <div className="mt-3 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+                          <div className="flex items-center gap-2 mb-1">
+                            <Star className="w-4 h-4 text-yellow-500" />
+                            <span className="font-medium text-sm">Your Review:</span>
+                            <div className="flex items-center">
+                              {[...Array(5)].map((_, i) => (
+                                <Star
+                                  key={i}
+                                  className={`w-3 h-3 ${
+                                    i < bookingReviewStatus.review.rating
+                                      ? 'text-yellow-400 fill-yellow-400'
+                                      : 'text-gray-300'
+                                  }`}
+                                />
+                              ))}
+                            </div>
+                          </div>
+                          <p className="text-sm text-gray-600">{bookingReviewStatus.review.comment}</p>
+                        </div>
+                      )}
+                    </div>
+                    
+                    <div className="text-right">
+                      <div className="text-2xl font-bold text-gray-600 mb-2">{booking.amount}</div>
+                      <span className={`px-3 py-1 rounded-full text-xs font-medium capitalize ${getStatusColor(booking.status)}`}>
+                        {booking.status}
+                      </span>
                     </div>
                   </div>
                   
-                  <div className="text-right">
-                    <div className="text-2xl font-bold text-gray-600 mb-2">{booking.amount}</div>
-                    <span className={`px-3 py-1 rounded-full text-xs font-medium capitalize ${getStatusColor(booking.status)}`}>
-                      {booking.status}
-                    </span>
+                  <div className="flex gap-3">
+                    <button className="flex-1 bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors">
+                      Book Again
+                    </button>
+                    
+                    {/* Always show Write Review button for completed bookings */}
+                    {booking.status === 'completed' && (
+                      <>
+                        {hasReview ? (
+                          <button 
+                            className="flex-1 bg-green-100 text-green-600 py-2 px-4 rounded-lg cursor-not-allowed opacity-75 flex items-center justify-center gap-2"
+                            disabled
+                            title="Review already submitted"
+                          >
+                            <CheckCircle className="w-4 h-4" />
+                            Review Submitted
+                          </button>
+                        ) : (
+                          <button 
+                            onClick={() => handleWriteReview(booking)}
+                            className="flex-1 bg-yellow-100 text-yellow-700 py-2 px-4 rounded-lg hover:bg-yellow-200 transition-colors flex items-center justify-center gap-2"
+                            title="Write a review for this booking"
+                          >
+                            <Star className="w-4 h-4" />
+                            Write Review
+                          </button>
+                        )}
+                      </>
+                    )}
+                    
+                    {/* Receipt Actions */}
+                    <button 
+                      onClick={() => handleDownloadReceipt(booking._id)}
+                      className="bg-green-100 text-green-600 py-2 px-4 rounded-lg hover:bg-green-200 transition-colors flex items-center justify-center gap-2"
+                      title="Download Receipt"
+                    >
+                      <Download className="w-4 h-4" />
+                    </button>
+                    
+                    <button 
+                      onClick={() => handleResendReceipt(booking._id)}
+                      className="bg-blue-100 text-blue-600 py-2 px-4 rounded-lg hover:bg-blue-200 transition-colors flex items-center justify-center gap-2"
+                      title="Resend Receipt"
+                    >
+                      <Send className="w-4 h-4" />
+                    </button>
                   </div>
                 </div>
-                
-                <div className="flex gap-3">
-                  <button className="flex-1 bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors">
-                    Book Again
-                  </button>
-                  <button className="flex-1 bg-gray-100 text-gray-700 py-2 px-4 rounded-lg hover:bg-gray-200 transition-colors">
-                    Write Review
-                  </button>
-                  <button className="bg-green-100 text-green-600 py-2 px-4 rounded-lg hover:bg-green-200 transition-colors">
-                    Download Receipt
-                  </button>
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </motion.div>
         )}
 
@@ -223,6 +362,34 @@ export default function BookingsPage() {
           </div>
         </div>
       </div>
+
+      {/* Review Modal */}
+      {selectedBooking && (
+        <ReviewModal
+          isOpen={isReviewModalOpen}
+          onClose={() => {
+            setIsReviewModalOpen(false);
+            setSelectedBooking(null);
+          }}
+          booking={{
+            id: selectedBooking._id,
+            turf: selectedBooking.turf,
+            date: selectedBooking.date,
+            time: selectedBooking.time,
+            location: selectedBooking.location
+          }}
+          onReviewSubmitted={async () => {
+            // Refresh review status for this booking
+            const updatedStatus = await checkReviewStatus(selectedBooking._id);
+            setReviewStatuses(prev => ({
+              ...prev,
+              [selectedBooking._id]: updatedStatus
+            }));
+            setIsReviewModalOpen(false);
+            setSelectedBooking(null);
+          }}
+        />
+      )}
 
       {/* Chatbot */}
       <Chatbot />
