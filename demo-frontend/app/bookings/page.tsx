@@ -5,6 +5,7 @@ import { motion } from 'framer-motion';
 import Link from 'next/link';
 import { Calendar, MapPin, Clock, CheckCircle, X, RefreshCw } from 'lucide-react';
 import DashboardLayout from '@/components/DashboardLayout';
+import Chatbot from '@/components/Chatbot';
 
 export default function BookingsPage() {
   const [activeTab, setActiveTab] = useState('upcoming');
@@ -222,6 +223,9 @@ export default function BookingsPage() {
           </div>
         </div>
       </div>
+
+      {/* Chatbot */}
+      <Chatbot />
     </DashboardLayout>
   );
 }

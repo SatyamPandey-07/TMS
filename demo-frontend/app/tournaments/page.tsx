@@ -5,6 +5,7 @@ import { motion } from 'framer-motion';
 import Link from 'next/link';
 import { Trophy, Calendar, Users, MapPin, Clock, Star } from 'lucide-react';
 import DashboardLayout from '@/components/DashboardLayout';
+import Chatbot from '@/components/Chatbot';
 
 export default function TournamentsPage() {
   const tournaments = [
@@ -117,6 +118,9 @@ export default function TournamentsPage() {
             ))}
         </div>
       </div>
+
+      {/* Chatbot */}
+      <Chatbot />
     </DashboardLayout>
   );
 }

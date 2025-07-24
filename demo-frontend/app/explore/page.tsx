@@ -20,6 +20,7 @@ import { Card } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
 import DashboardLayout from '@/components/DashboardLayout'
+import Chatbot from '@/components/Chatbot'
 import Link from 'next/link'
 
 const fadeInUp = {
@@ -353,6 +354,9 @@ export default function ExplorePage() {
           </motion.div>
         )}
       </div>
+
+      {/* Chatbot */}
+      <Chatbot />
     </DashboardLayout>
   )
 }

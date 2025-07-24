@@ -18,6 +18,7 @@ import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import ThemeToggle from '@/components/ThemeToggle'
+import Chatbot from '@/components/Chatbot'
 import Link from 'next/link'
 
 const fadeInUp = {
@@ -308,6 +309,9 @@ export default function HomePage() {
           </div>
         </div>
       </footer>
+
+      {/* Chatbot */}
+      <Chatbot />
     </div>
   )
 }
