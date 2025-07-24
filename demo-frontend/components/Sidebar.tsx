@@ -49,7 +49,7 @@ const ownerMenuItems: SidebarItem[] = [
   { name: 'Add New Turf', href: '/dashboard/owner/add-turf', icon: Plus },
   { name: 'Manage Slots', href: '/dashboard/owner/slots', icon: Clock },
   { name: 'Bookings', href: '/dashboard/owner/bookings', icon: Calendar },
-
+  { name: 'Analytics', href: '/dashboard/owner/analytics', icon: Calendar },
   { name: 'Settings', href: '/dashboard/owner/settings', icon: Settings },
 ]
 

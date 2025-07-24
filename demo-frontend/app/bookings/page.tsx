@@ -11,6 +11,7 @@ interface Booking {
   turfId: {
     name: string;
     location: string;
+    pricebase?: string;
   };
   slotId: {
     date: string;
@@ -20,11 +21,12 @@ interface Booking {
   status: string;
   paymentreceived?: number;
   paymentremain?: number;
+  isPaymentReceived: boolean; // Added this field
   createdAt?: string;
 }
 
 export default function BookingsPage() {
-  const [activeTab, setActiveTab] = useState<'upcoming' | 'past'>('upcoming');
+  const [activeTab, setActiveTab] = useState<'open' | 'closed'>('open'); // Changed from 'upcoming' | 'past'
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -44,16 +46,13 @@ export default function BookingsPage() {
     fetchBookings();
   }, []);
 
-  const now = new Date();
-
-  const upcomingBookings = bookings.filter((booking) => {
-    const bookingDate = new Date(booking.slotId?.date);
-    return bookingDate >= now;
+  // Filter bookings based on isPaymentReceived instead of date
+  const openBookings = bookings.filter((booking) => {
+    return !booking.isPaymentReceived;
   });
 
-  const pastBookings = bookings.filter((booking) => {
-    const bookingDate = new Date(booking.slotId?.date);
-    return bookingDate < now;
+  const closedBookings = bookings.filter((booking) => {
+    return booking.isPaymentReceived;
   });
 
   const getStatusColor = (status: string) => {
@@ -66,41 +65,41 @@ export default function BookingsPage() {
     }
   };
 
-  const renderBookingCard = (booking: Booking, isPast: boolean) => {
+  const renderBookingCard = (booking: Booking, isClosed: boolean) => { // Changed from isPast
     const dateStr = new Date(booking.slotId.date).toLocaleDateString(undefined, {
       month: 'short',
       day: 'numeric',
       year: 'numeric',
     });
-    console.log(booking.slotId);
-    
-    console.log(dateStr);
     
     const timeStr = `${booking.slotId.startHour} - ${booking.slotId.endHour}`;
-    console.log(timeStr);
     
-    const amount = booking.paymentreceived != null ? `₹${booking.paymentreceived}` : '—';
+    // Show different amounts based on booking status
+    const amount = isClosed 
+      ? (booking.turfId.pricebase ? `₹${booking.turfId.pricebase}` : '—')
+      : (booking.paymentreceived != null ? `₹${booking.paymentreceived}` : '—');
 
     const handleCancelBooking = async (bookingId: string) => {
-  try {
-    const res = await fetch(`/api/cancel-booking/${bookingId}`, {
-      method: 'DELETE',
-    });
+      try {
+        const res = await fetch(`/api/cancel-booking-user/${bookingId}`, {
+          method: 'DELETE',
+        });
 
-    const data = await res.json();
-    if (res.ok) {
-      setBookings((prev) => prev.filter((b) => b._id !== bookingId));
-      alert('Booking cancelled successfully');
-    } else {
-      alert(data.message || 'Failed to cancel booking');
-    }
-  } catch (err) {
-    console.error(err);
-    alert('Something went wrong while cancelling booking.');
-  }
-};
+        const data = await res.json();
+        if (res.ok) {
+          setBookings((prev) => prev.filter((b) => b._id !== bookingId));
+          alert('Booking cancelled successfully');
+        } else {
+          alert(data.message || 'Failed to cancel booking');
+        }
+      } catch (err) {
+        console.error(err);
+        alert('Something went wrong while cancelling booking.');
+      }
+    };
+
     return (
-      <div key={booking._id} className={`bg-white rounded-xl shadow-lg p-6 border-l-4 ${isPast ? 'border-gray-300' : 'border-blue-500'}`}>
+      <div key={booking._id} className={`bg-white rounded-xl shadow-lg p-6 border-l-4 ${isClosed ? 'border-gray-300' : 'border-blue-500'}`}>
         <div className="flex items-start justify-between mb-4">
           <div>
             <h3 className="text-xl font-bold text-gray-800 mb-2">{booking.turfId.name}</h3>
@@ -121,15 +120,23 @@ export default function BookingsPage() {
           </div>
 
           <div className="text-right">
-            <div className={`text-2xl font-bold ${isPast ? 'text-gray-600' : 'text-green-600'} mb-2`}>{amount}</div>
+            <div className={`text-2xl font-bold ${isClosed ? 'text-gray-600' : 'text-green-600'} mb-2`}>{amount}</div>
             <span className={`px-3 py-1 rounded-full text-xs font-medium capitalize ${getStatusColor(booking.status)}`}>
               {booking.status}
             </span>
+            {/* Added status badge for open/closed */}
+            <div className="mt-1">
+              <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                isClosed ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'
+              }`}>
+                {isClosed ? 'Closed' : 'Open'}
+              </span>
+            </div>
           </div>
         </div>
 
         <div className="flex gap-3">
-          {isPast ? (
+          {isClosed ? (
             <>
               <button className="flex-1 bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors">
                 Book Again
@@ -143,12 +150,10 @@ export default function BookingsPage() {
             </>
           ) : (
             <>
-              
-              
               <button
-                    onClick={() => handleCancelBooking(booking._id)}
-                    className="bg-red-100 text-red-600 py-2 px-4 rounded-lg hover:bg-red-200 transition-colors flex items-center justify-center gap-2"
-                  >
+                onClick={() => handleCancelBooking(booking._id)}
+                className="bg-red-100 text-red-600 py-2 px-4 rounded-lg hover:bg-red-200 transition-colors flex items-center justify-center gap-2"
+              >
                 <X className="w-4 h-4" />
                 Cancel
               </button>
@@ -168,37 +173,37 @@ export default function BookingsPage() {
           <p className="text-xl text-gray-600 dark:text-gray-300">Manage all your turf reservations</p>
         </div>
 
-        {/* Tabs */}
+        {/* Tabs - Changed from Upcoming/Past to Open/Closed */}
         <div className="flex gap-1 bg-gray-200 rounded-lg p-1 mb-8 max-w-md">
           <button
-            onClick={() => setActiveTab('upcoming')}
+            onClick={() => setActiveTab('open')}
             className={`flex-1 py-2 px-4 rounded-md font-medium transition-colors ${
-              activeTab === 'upcoming' ? 'bg-white text-blue-600 shadow-sm' : 'text-gray-600'
+              activeTab === 'open' ? 'bg-white text-blue-600 shadow-sm' : 'text-gray-600'
             }`}
           >
-            Upcoming
+            Open Bookings
           </button>
           <button
-            onClick={() => setActiveTab('past')}
+            onClick={() => setActiveTab('closed')}
             className={`flex-1 py-2 px-4 rounded-md font-medium transition-colors ${
-              activeTab === 'past' ? 'bg-white text-blue-600 shadow-sm' : 'text-gray-600'
+              activeTab === 'closed' ? 'bg-white text-blue-600 shadow-sm' : 'text-gray-600'
             }`}
           >
-            Past
+            Closed Bookings
           </button>
         </div>
 
         {/* Bookings Content */}
         {loading ? (
           <div className="text-center text-gray-500">Loading bookings...</div>
-        ) : activeTab === 'upcoming' ? (
+        ) : activeTab === 'open' ? (
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
-            {upcomingBookings.length > 0 ? (
-              upcomingBookings.map((booking) => renderBookingCard(booking, false))
+            {openBookings.length > 0 ? (
+              openBookings.map((booking) => renderBookingCard(booking, false))
             ) : (
               <div className="text-center py-12">
                 <Calendar className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-                <h3 className="text-xl font-semibold text-gray-600 mb-2">No Upcoming Bookings</h3>
+                <h3 className="text-xl font-semibold text-gray-600 mb-2">No Open Bookings</h3>
                 <p className="text-gray-500 mb-6">Ready to book your next game?</p>
                 <Link href="/explore" className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors">
                   Explore Turfs
@@ -208,10 +213,10 @@ export default function BookingsPage() {
           </motion.div>
         ) : (
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
-            {pastBookings.length > 0 ? (
-              pastBookings.map((booking) => renderBookingCard(booking, true))
+            {closedBookings.length > 0 ? (
+              closedBookings.map((booking) => renderBookingCard(booking, true))
             ) : (
-              <div className="text-center py-12 text-gray-500">No Past Bookings</div>
+              <div className="text-center py-12 text-gray-500">No Closed Bookings</div>
             )}
           </motion.div>
         )}
@@ -224,9 +229,7 @@ export default function BookingsPage() {
             <Link href="/explore" className="bg-white text-blue-600 px-6 py-3 rounded-lg font-medium hover:bg-gray-100 transition-colors">
               Explore Turfs
             </Link>
-            <Link href="/tournaments" className="bg-transparent border-2 border-white text-white px-6 py-3 rounded-lg font-medium hover:bg-white hover:text-blue-600 transition-colors">
-              Join Tournament
-            </Link>
+            
           </div>
         </div>
       </div>

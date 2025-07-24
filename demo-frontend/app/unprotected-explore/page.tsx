@@ -14,8 +14,9 @@ import {
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
-import DashboardLayout from '@/components/DashboardLayout'
 import Link from 'next/link'
+import { useSession } from 'next-auth/react'
+import { useRouter } from 'next/navigation'
 
 // --------------------
 // Types
@@ -65,14 +66,16 @@ function getDistanceFromLatLonInKm(lat1: number, lon1: number, lat2: number, lon
 }
 
 export default function ExplorePage() {
+  const { data: session, status } = useSession()
+  const router = useRouter()
   const [searchQuery, setSearchQuery] = useState<string>('')
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid')
   const [allTurfs, setAllTurfs] = useState<Turf[]>([])
   const [filteredTurfs, setFilteredTurfs] = useState<Turf[]>([])
   const [userLocation, setUserLocation] = useState<UserLocation | null>(null)
   const [loading, setLoading] = useState<boolean>(true)
-  const [distanceFilter, setDistanceFilter] = useState<number | null>(null) // Added distance filter state
-  const [dropdownOpen, setDropdownOpen] = useState(false) // Added dropdown state
+  const [distanceFilter, setDistanceFilter] = useState<number | null>(null)
+  const [dropdownOpen, setDropdownOpen] = useState(false)
 
   useEffect(() => {
     if ('geolocation' in navigator) {
@@ -153,8 +156,64 @@ export default function ExplorePage() {
     setDropdownOpen(false)
   }
 
+  const handleBookingClick = (turfId: string) => {
+    if (session) {
+      // User is logged in, redirect to booking page
+      router.push(`/dashboard/user/turfs/${turfId}`)
+    } else {
+      // User is not logged in, redirect to login page
+      router.push('/auth/signin')
+    }
+  }
+
+  const handleLoginRedirect = () => {
+    router.push('/auth/signin')
+  }
+
+  const handleDashboardRedirect = () => {
+    if (session?.user?.role === 'owner') {
+      router.push('/dashboard/owner')
+    } else {
+      router.push('/dashboard/user')
+    }
+  }
+
   return (
-    <DashboardLayout type="user">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-green-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
+      {/* Header/Navigation */}
+      <nav className="bg-white/80 dark:bg-gray-900/80 backdrop-blur-sm border-b border-gray-200 dark:border-gray-700 sticky top-0 z-50">
+        <div className="max-w-7xl mx-auto px-6 py-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-2">
+              <div className="w-8 h-8 bg-gradient-to-r from-blue-600 to-green-600 rounded-lg"></div>
+              <Link href="/">
+              <span className="text-xl font-bold text-gray-900 dark:text-white">TurfBooking</span>
+              </Link>
+            </div>
+            
+            <div className="flex items-center space-x-4">
+              {session ? (
+                <div className="flex items-center space-x-4">
+                  <span className="text-sm text-gray-600 dark:text-gray-300">
+                    Welcome, {session.user?.name}
+                  </span>
+                  <Button onClick={handleDashboardRedirect} variant="outline" size="sm">
+                    Go to Dashboard
+                  </Button>
+                </div>
+              ) : (
+                <div className="flex items-center space-x-2">
+                  <Button onClick={handleLoginRedirect} variant="outline" size="sm">
+                    Sign In
+                  </Button>
+                
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      </nav>
+
       <div className="p-6 max-w-7xl mx-auto">
         {/* Header */}
         <motion.div initial="initial" animate="animate" variants={fadeInUp} className="mb-8">
@@ -164,6 +223,14 @@ export default function ExplorePage() {
           <p className="text-gray-600 dark:text-gray-300">
             Discover and book the perfect turf for your next game
           </p>
+          {!session && (
+            <div className="mt-4 p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
+              <p className="text-blue-800 dark:text-blue-200 text-sm">
+                <Clock className="w-4 h-4 inline mr-2" />
+                Sign in to book turfs and manage your reservations
+              </p>
+            </div>
+          )}
         </motion.div>
 
         {/* Search & Filters */}
@@ -201,7 +268,10 @@ export default function ExplorePage() {
 
         {/* Loading state */}
         {loading ? (
-          <div className="text-center py-16 text-gray-500">Loading turfs...</div>
+          <div className="text-center py-16 text-gray-500">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+            Loading turfs...
+          </div>
         ) : (
           <>
             {/* Result Count & Filters */}
@@ -306,6 +376,13 @@ export default function ExplorePage() {
                         viewMode === 'list' ? 'w-full h-full' : 'w-full h-64'
                       }`}
                     />
+                    {!session && (
+                      <div className="absolute top-3 right-3">
+                        <div className="bg-blue-600 text-white text-xs px-2 py-1 rounded-full">
+                          Login to Book
+                        </div>
+                      </div>
+                    )}
                   </div>
 
                   <div className="p-4 flex flex-col justify-between flex-1">
@@ -328,17 +405,46 @@ export default function ExplorePage() {
                         <span className="text-2xl font-bold text-green-600">₹{turf.priceBase}</span>
                         <span className="text-gray-500 text-sm">/hour</span>
                       </div>
-                      <Link href={`/dashboard/user/turfs/${turf._id}`}>
-                        <Button variant="gradient" className="group">
-                          Book Now
-                          <Clock className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
-                        </Button>
-                      </Link>
+                      <Button 
+                        variant="gradient" 
+                        className="group"
+                        onClick={() => handleBookingClick(turf._id)}
+                      >
+                        {session ? 'Book Now' : 'Sign In to Book'}
+                        <Clock className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
+                      </Button>
                     </div>
                   </div>
                 </motion.div>
               ))}
             </motion.div>
+
+            {/* Empty State */}
+            {filteredTurfs.length === 0 && !loading && (
+              <motion.div
+                initial="initial"
+                animate="animate"
+                variants={fadeInUp}
+                className="text-center py-16"
+              >
+                <div className="text-6xl mb-4">🏟️</div>
+                <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
+                  No turfs found
+                </h3>
+                <p className="text-gray-600 dark:text-gray-300 mb-4">
+                  Try adjusting your search criteria or distance filter
+                </p>
+                <Button 
+                  variant="outline" 
+                  onClick={() => {
+                    setSearchQuery('')
+                    setDistanceFilter(null)
+                  }}
+                >
+                  Clear Filters
+                </Button>
+              </motion.div>
+            )}
 
             {/* Click outside to close dropdown */}
             {dropdownOpen && (
@@ -350,6 +456,6 @@ export default function ExplorePage() {
           </>
         )}
       </div>
-    </DashboardLayout>
+    </div>
   )
 }

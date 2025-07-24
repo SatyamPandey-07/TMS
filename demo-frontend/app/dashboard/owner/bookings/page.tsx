@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
-import { CalendarIcon, UserIcon, CurrencyRupeeIcon, ClockIcon, ChevronDownIcon } from '@heroicons/react/24/outline';
+import { CalendarIcon, UserIcon, CurrencyRupeeIcon, ClockIcon, ChevronDownIcon, XMarkIcon, TrashIcon } from '@heroicons/react/24/outline';
 import DashboardLayout from '@/components/DashboardLayout';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -12,6 +12,7 @@ type Booking = {
   turfId: {
     name: string;
     location: string;
+    priceBase?: string;
   };
   slotId: {
     date: string;
@@ -23,6 +24,7 @@ type Booking = {
     email: string;
   };
   paymentreceived: string;
+  isPaymentReceived: boolean;
   status: string;
   createdAt: string;
 };
@@ -31,14 +33,21 @@ export default function BookingsPage() {
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [filteredBookings, setFilteredBookings] = useState<Booking[]>([]);
   const [loading, setLoading] = useState(true);
-  const [filterType, setFilterType] = useState<'upcoming' | 'past'>('upcoming');
+  const [activeTab, setActiveTab] = useState<'open' | 'closed'>('open');
   const [dropdownOpen, setDropdownOpen] = useState(false);
+  
+  // Cancellation modal states
+  const [showCancelModal, setShowCancelModal] = useState(false);
+  const [selectedBookingId, setSelectedBookingId] = useState<string>('');
+  const [cancellationReason, setCancellationReason] = useState('');
+  const [submittingCancel, setSubmittingCancel] = useState(false);
 
   useEffect(() => {
     const fetchBookings = async () => {
       try {
         const response = await fetch('/api/fetch-booking');
         const data = await response.json();
+        console.log(data);
         
         if (data.bookings) {
           setBookings(data.bookings);
@@ -53,26 +62,18 @@ export default function BookingsPage() {
     fetchBookings();
   }, []);
 
-  // Filter bookings based on current time and selected filter
+  // Filter bookings based on isPaymentReceived
   useEffect(() => {
-    const currentDateTime = new Date();
-    
     const filtered = bookings.filter(booking => {
-      // Parse the booking date and time
-      const bookingDate = booking.slotId.date;
-      const endHour = parseInt(booking.slotId.endHour);
-      const bookingDateTime = new Date(bookingDate);
-      bookingDateTime.setHours(endHour, 0, 0, 0);
-      
-      if (filterType === 'upcoming') {
-        return bookingDateTime >= currentDateTime;
+      if (activeTab === 'open') {
+        return !booking.isPaymentReceived;
       } else {
-        return bookingDateTime < currentDateTime;
+        return booking.isPaymentReceived;
       }
     });
 
     setFilteredBookings(filtered);
-  }, [bookings, filterType]);
+  }, [bookings, activeTab]);
 
   const getStatusColor = (status: string) => {
     switch (status.toLowerCase()) {
@@ -83,9 +84,104 @@ export default function BookingsPage() {
     }
   };
 
-  const handleFilterChange = (type: 'upcoming' | 'past') => {
-    setFilterType(type);
+  const handleTabChange = (tab: 'open' | 'closed') => {
+    setActiveTab(tab);
     setDropdownOpen(false);
+  };
+
+  // Function to close booking
+  const handleCloseBooking = async (bookingId: string) => {
+    try {
+      const response = await fetch(`/api/close-booking/${bookingId}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ isPaymentReceived: true }),
+      });
+
+      if (response.ok) {
+        // Update local state
+        setBookings(prev => prev.map(booking => 
+          booking._id === bookingId 
+            ? { ...booking, isPaymentReceived: true }
+            : booking
+        ));
+        alert('Booking closed successfully!');
+      } else {
+        const errorData = await response.json();
+        alert(`Error: ${errorData.message || 'Failed to close booking'}`);
+      }
+    } catch (error) {
+      console.error('Error closing booking:', error);
+      alert('Error closing booking. Please try again.');
+    }
+  };
+
+  // Function to open cancel modal
+  const handleCancelBookingClick = (bookingId: string) => {
+    setSelectedBookingId(bookingId);
+    setShowCancelModal(true);
+    setCancellationReason('');
+  };
+
+  // Function to submit cancellation with reason
+  const handleSubmitCancellation = async () => {
+    if (!cancellationReason.trim()) {
+      alert('Please provide a reason for cancellation.');
+      return;
+    }
+
+    setSubmittingCancel(true);
+
+    try {
+      const response = await fetch(`/api/cancel-booking/${selectedBookingId}`, {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ 
+          cancellationReason: cancellationReason.trim() 
+        }),
+      });
+
+      if (response.ok) {
+        // Remove booking from local state
+        setBookings(prev => prev.filter(booking => booking._id !== selectedBookingId));
+        alert('Booking cancelled successfully!');
+        setShowCancelModal(false);
+        setCancellationReason('');
+        setSelectedBookingId('');
+      } else {
+        const errorData = await response.json();
+        alert(`Error: ${errorData.message || 'Failed to cancel booking'}`);
+      }
+    } catch (error) {
+      console.error('Error cancelling booking:', error);
+      alert('Error cancelling booking. Please try again.');
+    } finally {
+      setSubmittingCancel(false);
+    }
+  };
+
+  // Function to close cancel modal
+  const handleCloseCancelModal = () => {
+    setShowCancelModal(false);
+    setCancellationReason('');
+    setSelectedBookingId('');
+  };
+
+  // Calculate total revenue
+  const calculateTotalRevenue = () => {
+    const openBookingsRevenue = bookings
+      .filter(b => !b.isPaymentReceived)
+      .reduce((sum, b) => sum + parseFloat(b.paymentreceived || '0'), 0);
+    
+    const closedBookingsRevenue = bookings
+      .filter(b => b.isPaymentReceived)
+      .reduce((sum, b) => sum + parseFloat(b.turfId.priceBase || '0'), 0);
+    
+    return openBookingsRevenue + closedBookingsRevenue;
   };
 
   return (
@@ -106,13 +202,13 @@ export default function BookingsPage() {
             </p>
           </div>
 
-          {/* Filter Dropdown */}
+          {/* Tab Dropdown */}
           <div className="relative">
             <button
               onClick={() => setDropdownOpen(!dropdownOpen)}
               className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm hover:shadow-md transition-all duration-200 text-gray-700 dark:text-gray-300"
             >
-              <span className="capitalize">{filterType} Bookings</span>
+              <span className="capitalize">{activeTab} Bookings</span>
               <ChevronDownIcon className={`w-4 h-4 transition-transform duration-200 ${dropdownOpen ? 'rotate-180' : ''}`} />
             </button>
 
@@ -125,24 +221,24 @@ export default function BookingsPage() {
               >
                 <div className="py-1">
                   <button
-                    onClick={() => handleFilterChange('upcoming')}
+                    onClick={() => handleTabChange('open')}
                     className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors ${
-                      filterType === 'upcoming' 
+                      activeTab === 'open' 
                         ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400' 
                         : 'text-gray-700 dark:text-gray-300'
                     }`}
                   >
-                    Upcoming Bookings
+                    Open Bookings
                   </button>
                   <button
-                    onClick={() => handleFilterChange('past')}
+                    onClick={() => handleTabChange('closed')}
                     className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors ${
-                      filterType === 'past' 
+                      activeTab === 'closed' 
                         ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400' 
                         : 'text-gray-700 dark:text-gray-300'
                     }`}
                   >
-                    Past Bookings
+                    Closed Bookings
                   </button>
                 </div>
               </motion.div>
@@ -173,7 +269,7 @@ export default function BookingsPage() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-gray-600 dark:text-gray-400">
-                  {filterType === 'upcoming' ? 'Upcoming' : 'Past'} Bookings
+                  {activeTab === 'open' ? 'Open' : 'Closed'} Bookings
                 </p>
                 <p className="text-2xl font-bold text-green-600 dark:text-green-400">
                   {filteredBookings.length}
@@ -190,7 +286,7 @@ export default function BookingsPage() {
               <div>
                 <p className="text-sm text-gray-600 dark:text-gray-400">Total Revenue</p>
                 <p className="text-2xl font-bold text-yellow-600 dark:text-yellow-400">
-                  ₹{bookings.reduce((sum, b) => sum + parseFloat(b.paymentreceived || '0'), 0)}
+                  ₹{calculateTotalRevenue()}
                 </p>
               </div>
               <div className="w-12 h-12 bg-gradient-to-br from-yellow-400 to-orange-400 rounded-full flex items-center justify-center">
@@ -238,6 +334,9 @@ export default function BookingsPage() {
                       <Badge className={`${getStatusColor(booking.status)} text-white`}>
                         {booking.status}
                       </Badge>
+                      <Badge className={`${booking.isPaymentReceived ? 'bg-green-500' : 'bg-yellow-500'} text-white`}>
+                        {booking.isPaymentReceived ? 'Closed' : 'Open'}
+                      </Badge>
                     </div>
                     
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -260,13 +359,36 @@ export default function BookingsPage() {
                       <div>
                         <p className="text-sm text-gray-500 dark:text-gray-400">Payment</p>
                         <p className="font-medium text-green-600 dark:text-green-400">
-                          ₹{booking.paymentreceived}
+                          ₹{booking.isPaymentReceived ? (booking.turfId.priceBase || '0') : booking.paymentreceived}
                         </p>
                         <p className="text-sm text-gray-600 dark:text-gray-400">
                           {new Date(booking.createdAt).toLocaleDateString()}
                         </p>
                       </div>
                     </div>
+
+                    {/* Action Buttons Section - Only show for open bookings */}
+                    {!booking.isPaymentReceived && (
+                      <div className="flex gap-3 mt-4 pt-4 border-t border-gray-200 dark:border-gray-600">
+                        <button
+                          onClick={() => handleCancelBookingClick(booking._id)}
+                          className="flex items-center gap-2 px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg transition-colors duration-200 text-sm font-medium"
+                          title="Cancel Booking"
+                        >
+                          <TrashIcon className="w-4 h-4" />
+                          Cancel Booking
+                        </button>
+                        
+                        <button
+                          onClick={() => handleCloseBooking(booking._id)}
+                          className="flex items-center gap-2 px-4 py-2 bg-green-500 hover:bg-green-600 text-white rounded-lg transition-colors duration-200 text-sm font-medium"
+                          title="Close Booking"
+                        >
+                          <XMarkIcon className="w-4 h-4" />
+                          Close Booking
+                        </button>
+                      </div>
+                    )}
                   </div>
                 </div>
               </Card>
@@ -285,15 +407,80 @@ export default function BookingsPage() {
               <CalendarIcon className="w-12 h-12 text-white" />
             </div>
             <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
-              No {filterType} bookings
+              No {activeTab} bookings
             </h3>
             <p className="text-gray-600 dark:text-gray-400">
-              {filterType === 'upcoming' 
-                ? "No upcoming bookings found. New bookings will appear here."
-                : "No past bookings found. Completed bookings will appear here."
+              {activeTab === 'open' 
+                ? "No open bookings found. New bookings will appear here."
+                : "No closed bookings found. Completed bookings will appear here."
               }
             </p>
           </motion.div>
+        )}
+
+        {/* Cancellation Modal */}
+        {showCancelModal && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.9 }}
+              className="bg-white dark:bg-gray-800 rounded-2xl p-6 w-full max-w-md mx-4 shadow-2xl"
+            >
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-xl font-bold text-gray-900 dark:text-white">
+                  Cancel Booking
+                </h3>
+                <button
+                  onClick={handleCloseCancelModal}
+                  className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+                >
+                  <XMarkIcon className="w-6 h-6" />
+                </button>
+              </div>
+              
+              <p className="text-gray-600 dark:text-gray-400 mb-4">
+                Please provide a reason for cancelling this booking:
+              </p>
+              
+              <textarea
+                value={cancellationReason}
+                onChange={(e) => setCancellationReason(e.target.value)}
+                placeholder="Enter cancellation reason..."
+                className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white resize-none"
+                rows={4}
+                maxLength={500}
+              />
+              
+              <div className="text-right text-sm text-gray-500 dark:text-gray-400 mb-4">
+                {cancellationReason.length}/500 characters
+              </div>
+              
+              <div className="flex gap-3 justify-end">
+                <button
+                  onClick={handleCloseCancelModal}
+                  className="px-4 py-2 text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 transition-colors"
+                  disabled={submittingCancel}
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleSubmitCancellation}
+                  disabled={submittingCancel || !cancellationReason.trim()}
+                  className="px-6 py-2 bg-red-500 hover:bg-red-600 disabled:bg-red-300 text-white rounded-lg transition-colors duration-200 flex items-center gap-2"
+                >
+                  {submittingCancel ? (
+                    <>
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                      Cancelling...
+                    </>
+                  ) : (
+                    'Confirm Cancellation'
+                  )}
+                </button>
+              </div>
+            </motion.div>
+          </div>
         )}
 
         {/* Click outside to close dropdown */}

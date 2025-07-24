@@ -99,18 +99,13 @@ export default function HomePage() {
             </motion.div>
 
             <motion.div variants={fadeInUp} className="flex flex-col sm:flex-row gap-4 justify-center mb-16">
-              <Link href="/login">
+              <Link href="/unprotected-explore">
                 <Button size="lg" className="bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600 text-white px-8 py-6 text-lg">
                   <Play className="mr-2 h-5 w-5" />
                   Explore Turfs
                 </Button>
               </Link>
-              <Link href="/login">
-                <Button variant="outline" size="lg" className="px-8 py-6 text-lg border-2">
-                  <Trophy className="mr-2 h-5 w-5" />
-                  Join Tournaments
-                </Button>
-              </Link>
+              
             </motion.div>
 
             {/* Stats */}

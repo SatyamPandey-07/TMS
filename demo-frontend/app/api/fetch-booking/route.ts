@@ -58,7 +58,7 @@ const bookings = await Booking.find({ turfId: { $in: turfIds } })
   })
   .populate({
     path: 'turfId',
-    select: 'name location'
+    select: 'name location priceBase'
   })
   .sort({ createdAt: -1 });
 

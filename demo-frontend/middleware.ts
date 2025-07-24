@@ -6,7 +6,7 @@ export default withAuth(
     const token = req.nextauth?.token;
     const { pathname } = req.nextUrl;
 
-    const isPublicPage = ["/", "/login", "/register"].includes(pathname);
+    const isPublicPage = ["/", "/login", "/register", "/unprotected-explore"].includes(pathname);
 
     if (!token && !isPublicPage) {
       return NextResponse.redirect(new URL("/login", req.url));
@@ -46,7 +46,7 @@ export default withAuth(
 
 export const config = {
   matcher: [
-    // Exclude _next, images, favicon, public, and API routes
-    "/((?!_next/static|_next/image|favicon.ico|public/|api/).*)",
+    "/((?!_next/static|_next/image|favicon.ico|public/|api/|unprotected-explore).*)",
   ],
 };
+

@@ -10,6 +10,7 @@ export interface IBooking{
     paymentreceived?:number,
     paymentremain?: number,
     paymentId?: String,
+    isPaymentReceived: boolean,
     _id?: mongoose.Types.ObjectId,
     createdAt?: Date,
     updatedAt?: Date,
@@ -36,7 +37,11 @@ const BookingSchema = new Schema<IBooking>(
             type: String,
             required: false
 
-        }
+        },
+        isPaymentReceived: {
+            type: Boolean,
+            default: false,
+        },
     },
     {timestamps: true}
 );
