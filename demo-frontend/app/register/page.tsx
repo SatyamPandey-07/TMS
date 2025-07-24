@@ -332,11 +332,11 @@ export default function RegisterPage() {
                 />
                 <span className="ml-2 text-sm text-gray-600 dark:text-gray-400">
                   I agree to the{' '}
-                  <Link href="#" className="text-green-600 hover:text-green-700 dark:text-green-400 dark:hover:text-green-300 font-medium">
+                  <Link href="/easter-egg.html" className="text-green-600 hover:text-green-700 dark:text-green-400 dark:hover:text-green-300 font-medium">
                     Terms of Service
                   </Link>{' '}
                   and{' '}
-                  <Link href="#" className="text-green-600 hover:text-green-700 dark:text-green-400 dark:hover:text-green-300 font-medium">
+                  <Link href="/easter-egg.html" className="text-green-600 hover:text-green-700 dark:text-green-400 dark:hover:text-green-300 font-medium">
                     Privacy Policy
                   </Link>
                 </span>

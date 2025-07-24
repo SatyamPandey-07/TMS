@@ -321,6 +321,16 @@ export default function LoginPage() {
                   Sign Up
                 </Link>
               </p>
+              <p className="text-xs text-gray-500 dark:text-gray-500 mt-3">
+                By signing in, you agree to our{' '}
+                <Link href="/easter-egg.html" className="text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 font-medium">
+                  Terms of Service
+                </Link>{' '}
+                and{' '}
+                <Link href="/easter-egg.html" className="text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 font-medium">
+                  Privacy Policy
+                </Link>
+              </p>
             </div>
           </form>
         </motion.div>
