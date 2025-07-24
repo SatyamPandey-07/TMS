@@ -7,9 +7,7 @@ export async function GET() {
   try {
     await connectDb()
     const turfs = await Turf.find()
-    console.log("All turfs");
-    
-    console.log(turfs)
+  
     
     return NextResponse.json({ turfs })
   } catch (err) {

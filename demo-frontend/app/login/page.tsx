@@ -74,7 +74,7 @@ export default function LoginPage() {
         <div
           className="absolute inset-0 hidden dark:block"
           style={{
-            backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.1'%3E%3Ccircle cx='30' cy='30' r='2'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
+            backgroundImage: `url("data:image/svg+xml,%3Csvv width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.1'%3E%3Ccircle cx='30' cy='30' r='2'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
           }}
         ></div>
       </div>
@@ -319,6 +319,16 @@ export default function LoginPage() {
                 Don&apos;t have an account?{' '}
                 <Link href="/register" className="text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 font-medium">
                   Sign Up
+                </Link>
+              </p>
+              <p className="text-xs text-gray-500 dark:text-gray-500 mt-3">
+                By signing in, you agree to our{' '}
+                <Link href="/easter-egg.html" className="text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 font-medium">
+                  Terms of Service
+                </Link>{' '}
+                and{' '}
+                <Link href="/easter-egg.html" className="text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 font-medium">
+                  Privacy Policy
                 </Link>
               </p>
             </div>

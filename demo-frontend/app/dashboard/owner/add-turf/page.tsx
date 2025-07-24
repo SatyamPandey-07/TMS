@@ -16,6 +16,7 @@ import {
   XMarkIcon,
   SparklesIcon
 } from '@heroicons/react/24/outline';
+import DashboardLayout from '@/components/DashboardLayout';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 delete (L.Icon.Default.prototype as any)._getIconUrl;
@@ -151,6 +152,7 @@ const AddTurf = () => {
   };
 
   return (
+  <DashboardLayout>
     <div className="min-h-screen bg-gradient-to-br from-green-50 via-white to-blue-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 p-4 lg:p-8">
       <div className="max-w-6xl mx-auto">
         {/* Header */}
@@ -204,7 +206,7 @@ const AddTurf = () => {
         <motion.div 
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
-          className="bg-white dark:bg-gray-800 rounded-3xl shadow-2xl p-8 backdrop-blur-sm border border-gray-200 dark:border-gray-700"
+          className="bg-white dark:bg-gray-800 rounded-3xl shadow-2xl p-8 border border-gray-200 dark:border-gray-700"
         >
           <AnimatePresence mode="wait">
             {/* Step 1: Basic Information */}
@@ -564,6 +566,7 @@ const AddTurf = () => {
         </AnimatePresence>
       </div>
     </div>
+  </DashboardLayout>
   );
 
 };

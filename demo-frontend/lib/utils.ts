@@ -60,3 +60,23 @@ export function getRandomTurfImages() {
   ]
   return images[Math.floor(Math.random() * images.length)]
 }
+
+// Chatbot utility functions
+export function initializeChatbot() {
+  console.log('TurfMaster Chatbot initialized 🤖');
+}
+
+export function getChatbotGreeting() {
+  const greetings = [
+    "Hello! 👋 Welcome to TurfMaster! How can I help you find the perfect turf today?",
+    "Hi there! 🏟️ I'm your TurfMaster assistant. Ready to book some amazing turfs?",
+    "Welcome to TurfMaster! I'm here to help you with bookings, locations, and more!"
+  ];
+  return greetings[Math.floor(Math.random() * greetings.length)];
+}
+
+export function shouldShowChatbot(pathname: string) {
+  // Show chatbot on all pages except dashboard pages (to avoid interference with dashboard layout)
+  const hideChatbotPaths = ['/dashboard', '/login', '/register'];
+  return !hideChatbotPaths.some(path => pathname.startsWith(path));
+}

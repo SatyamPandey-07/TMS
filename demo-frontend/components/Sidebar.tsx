@@ -66,7 +66,7 @@ export default function Sidebar({ type }: SidebarProps) {
     <motion.div
       initial={{ x: -280 }}
       animate={{ x: 0 }}
-      className="fixed left-0 top-0 h-full w-72 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 shadow-xl z-40 transition-colors duration-200"
+      className="fixed left-0 top-0 h-full w-72 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 shadow-xl z-40 transition-colors duration-200 overflow-y-auto"
     >
       {/* Header */}
       <div className="p-6 border-b border-gray-200 dark:border-gray-700">
@@ -85,7 +85,7 @@ export default function Sidebar({ type }: SidebarProps) {
       </div>
 
       {/* Menu Items */}
-      <nav className="p-4 flex-1 overflow-y-auto">
+      <nav className="p-4 flex-1">
         <ul className="space-y-2">
           {menuItems.map((item) => {
             const isActive = pathname === item.href

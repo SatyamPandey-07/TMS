@@ -12,16 +12,23 @@ export default function RegisterPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [formData, setFormData] = useState({
-    name: '',
-    email: '',
-    password: '',
-    confirmPassword: '',
-    role: 'user', // default to user
-    agreeToTerms: false
-  });
+      name: '',
+      email: '',
+      password: '',
+      confirmPassword: '',
+      role: 'user',
+      agreeToTerms: false,
+      phone: '',
+      acceptedPaymentMethods: [],
+    });
+
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+   e.preventDefault();
+  if (formData.role === 'admin' && !formData.phone) {
+    alert('Phone number is required for owners!');
+    return;
+  }
     
     if (formData.password !== formData.confirmPassword) {
       alert('Passwords do not match!');
@@ -212,6 +219,15 @@ export default function RegisterPage() {
                   placeholder="Enter your email"
                   required
                 />
+                <Input
+                  type="tel"
+                  value={formData.phone}
+                  onChange={(e) => setFormData({...formData, phone: e.target.value})}
+                  className="pl-10"
+                  placeholder="Enter your phone number"
+                  required={formData.role === 'admin'} // Required for owner, optional for user
+                />
+
               </div>
             </div>
 
@@ -257,6 +273,34 @@ export default function RegisterPage() {
                 </label>
               </div>
             </div>
+            {formData.role === 'admin' && (
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              Accepted Payment Methods
+            </label>
+              <div className="flex flex-wrap gap-3">
+                    {['UPI', 'Credit Card', 'Debit Card', 'Net Banking', 'Wallet'].map(method => (
+                      <label key={method} className="flex items-center gap-2">
+                        <input
+                          type="checkbox"
+                          checked={formData.acceptedPaymentMethods?.includes(method) || false}
+                          onChange={e => {
+                            const methods = formData.acceptedPaymentMethods || [];
+                            setFormData({
+                              ...formData,
+                              acceptedPaymentMethods: e.target.checked
+                                ? [...methods, method]
+                                : methods.filter(m => m !== method)
+                            });
+                          }}
+                        />
+                        <span>{method}</span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+              )}
+
 
             {/* Password Field */}
             <div>

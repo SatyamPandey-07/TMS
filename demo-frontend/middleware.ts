@@ -4,8 +4,6 @@ import { NextResponse } from "next/server";
 export default withAuth(
   function middleware(req) {
     const token = req.nextauth?.token;
-    console.log(token);
-    
     const { pathname } = req.nextUrl;
 
     const isPublicPage = ["/", "/login", "/register"].includes(pathname);
@@ -13,7 +11,20 @@ export default withAuth(
     if (!token && !isPublicPage) {
       return NextResponse.redirect(new URL("/login", req.url));
     }
+
+    // If user is authenticated and on a public page, redirect to appropriate dashboard
+    if (token && isPublicPage) {
+      const userRole = token.role as string;
+      
+      if (userRole === "admin") {
+        return NextResponse.redirect(new URL("/dashboard/owner", req.url));
+      } else if (userRole === "user") {
+        return NextResponse.redirect(new URL("/dashboard", req.url));
+      }
+    }
+
     
+
     return NextResponse.next();
   },
   {

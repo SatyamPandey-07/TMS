@@ -1,55 +1,60 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import Link from 'next/link';
 import { Calendar, MapPin, Clock, CheckCircle, X, RefreshCw } from 'lucide-react';
 import DashboardLayout from '@/components/DashboardLayout';
 
+interface Booking {
+  _id: string;
+  turfId: {
+    name: string;
+    location: string;
+  };
+  slotId: {
+    date: string;
+    startHour: string;
+    endHour: string;
+  };
+  status: string;
+  paymentreceived?: number;
+  paymentremain?: number;
+  createdAt?: string;
+}
+
 export default function BookingsPage() {
-  const [activeTab, setActiveTab] = useState('upcoming');
+  const [activeTab, setActiveTab] = useState<'upcoming' | 'past'>('upcoming');
+  const [bookings, setBookings] = useState<Booking[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const upcomingBookings = [
-    {
-      id: 1,
-      turf: "Green Valley Football Turf",
-      date: "Jul 28, 2025",
-      time: "7:00 PM - 9:00 PM",
-      location: "Andheri West, Mumbai",
-      amount: "₹2,000",
-      status: "confirmed"
-    },
-    {
-      id: 2,
-      turf: "Champions Cricket Ground",
-      date: "Jul 30, 2025",
-      time: "9:00 AM - 11:00 AM",
-      location: "Bandra East, Mumbai",
-      amount: "₹1,800",
-      status: "pending"
-    }
-  ];
+  useEffect(() => {
+    const fetchBookings = async () => {
+      try {
+        const res = await fetch('/api/fetch-booking-user');
+        const data = await res.json();
+        setBookings(data.bookings || []);
+      } catch (err) {
+        console.error('Failed to fetch bookings:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
 
-  const pastBookings = [
-    {
-      id: 3,
-      turf: "Elite Sports Complex",
-      date: "Jul 20, 2025",
-      time: "6:00 PM - 8:00 PM",
-      location: "Powai, Mumbai",
-      amount: "₹2,500",
-      status: "completed"
-    },
-    {
-      id: 4,
-      turf: "Royal Tennis Courts",
-      date: "Jul 15, 2025",
-      time: "5:00 PM - 6:00 PM",
-      location: "Juhu, Mumbai",
-      amount: "₹1,200",
-      status: "completed"
-    }
-  ];
+    fetchBookings();
+  }, []);
+
+  const now = new Date();
+
+  const upcomingBookings = bookings.filter((booking) => {
+    const bookingDate = new Date(booking.slotId?.date);
+    return bookingDate >= now;
+  });
+
+  const pastBookings = bookings.filter((booking) => {
+    const bookingDate = new Date(booking.slotId?.date);
+    return bookingDate < now;
+  });
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -61,10 +66,103 @@ export default function BookingsPage() {
     }
   };
 
+  const renderBookingCard = (booking: Booking, isPast: boolean) => {
+    const dateStr = new Date(booking.slotId.date).toLocaleDateString(undefined, {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric',
+    });
+    console.log(booking.slotId);
+    
+    console.log(dateStr);
+    
+    const timeStr = `${booking.slotId.startHour} - ${booking.slotId.endHour}`;
+    console.log(timeStr);
+    
+    const amount = booking.paymentreceived != null ? `₹${booking.paymentreceived}` : '—';
+
+    const handleCancelBooking = async (bookingId: string) => {
+  try {
+    const res = await fetch(`/api/cancel-booking/${bookingId}`, {
+      method: 'DELETE',
+    });
+
+    const data = await res.json();
+    if (res.ok) {
+      setBookings((prev) => prev.filter((b) => b._id !== bookingId));
+      alert('Booking cancelled successfully');
+    } else {
+      alert(data.message || 'Failed to cancel booking');
+    }
+  } catch (err) {
+    console.error(err);
+    alert('Something went wrong while cancelling booking.');
+  }
+};
+    return (
+      <div key={booking._id} className={`bg-white rounded-xl shadow-lg p-6 border-l-4 ${isPast ? 'border-gray-300' : 'border-blue-500'}`}>
+        <div className="flex items-start justify-between mb-4">
+          <div>
+            <h3 className="text-xl font-bold text-gray-800 mb-2">{booking.turfId.name}</h3>
+            <div className="flex items-center gap-4 text-gray-600">
+              <div className="flex items-center gap-1">
+                <Calendar className="w-4 h-4" />
+                <span>{dateStr}</span>
+              </div>
+              <div className="flex items-center gap-1">
+                <Clock className="w-4 h-4" />
+                <span>{timeStr}</span>
+              </div>
+              <div className="flex items-center gap-1">
+                <MapPin className="w-4 h-4" />
+                <span>{booking.turfId.location}</span>
+              </div>
+            </div>
+          </div>
+
+          <div className="text-right">
+            <div className={`text-2xl font-bold ${isPast ? 'text-gray-600' : 'text-green-600'} mb-2`}>{amount}</div>
+            <span className={`px-3 py-1 rounded-full text-xs font-medium capitalize ${getStatusColor(booking.status)}`}>
+              {booking.status}
+            </span>
+          </div>
+        </div>
+
+        <div className="flex gap-3">
+          {isPast ? (
+            <>
+              <button className="flex-1 bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors">
+                Book Again
+              </button>
+              <button className="flex-1 bg-gray-100 text-gray-700 py-2 px-4 rounded-lg hover:bg-gray-200 transition-colors">
+                Write Review
+              </button>
+              <button className="bg-green-100 text-green-600 py-2 px-4 rounded-lg hover:bg-green-200 transition-colors">
+                Download Receipt
+              </button>
+            </>
+          ) : (
+            <>
+              
+              
+              <button
+                    onClick={() => handleCancelBooking(booking._id)}
+                    className="bg-red-100 text-red-600 py-2 px-4 rounded-lg hover:bg-red-200 transition-colors flex items-center justify-center gap-2"
+                  >
+                <X className="w-4 h-4" />
+                Cancel
+              </button>
+            </>
+          )}
+        </div>
+      </div>
+    );
+  };
+
   return (
     <DashboardLayout type="user">
       <div className="p-6">
-        {/* Page Header */}
+        {/* Header */}
         <div className="mb-8">
           <h1 className="text-4xl font-bold mb-4 text-gray-900 dark:text-white">My Bookings</h1>
           <p className="text-xl text-gray-600 dark:text-gray-300">Manage all your turf reservations</p>
@@ -90,14 +188,14 @@ export default function BookingsPage() {
           </button>
         </div>
 
-        {/* Upcoming Bookings */}
-        {activeTab === 'upcoming' && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="space-y-6"
-          >
-            {upcomingBookings.length === 0 ? (
+        {/* Bookings Content */}
+        {loading ? (
+          <div className="text-center text-gray-500">Loading bookings...</div>
+        ) : activeTab === 'upcoming' ? (
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
+            {upcomingBookings.length > 0 ? (
+              upcomingBookings.map((booking) => renderBookingCard(booking, false))
+            ) : (
               <div className="text-center py-12">
                 <Calendar className="w-16 h-16 text-gray-300 mx-auto mb-4" />
                 <h3 className="text-xl font-semibold text-gray-600 mb-2">No Upcoming Bookings</h3>
@@ -106,109 +204,19 @@ export default function BookingsPage() {
                   Explore Turfs
                 </Link>
               </div>
+            )}
+          </motion.div>
+        ) : (
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
+            {pastBookings.length > 0 ? (
+              pastBookings.map((booking) => renderBookingCard(booking, true))
             ) : (
-              upcomingBookings.map((booking) => (
-                <div key={booking.id} className="bg-white rounded-xl shadow-lg p-6 border-l-4 border-blue-500">
-                  <div className="flex items-start justify-between mb-4">
-                    <div>
-                      <h3 className="text-xl font-bold text-gray-800 mb-2">{booking.turf}</h3>
-                      <div className="flex items-center gap-4 text-gray-600">
-                        <div className="flex items-center gap-1">
-                          <Calendar className="w-4 h-4" />
-                          <span>{booking.date}</span>
-                        </div>
-                        <div className="flex items-center gap-1">
-                          <Clock className="w-4 h-4" />
-                          <span>{booking.time}</span>
-                        </div>
-                        <div className="flex items-center gap-1">
-                          <MapPin className="w-4 h-4" />
-                          <span>{booking.location}</span>
-                        </div>
-                      </div>
-                    </div>
-                    
-                    <div className="text-right">
-                      <div className="text-2xl font-bold text-green-600 mb-2">{booking.amount}</div>
-                      <span className={`px-3 py-1 rounded-full text-xs font-medium capitalize ${getStatusColor(booking.status)}`}>
-                        {booking.status}
-                      </span>
-                    </div>
-                  </div>
-                  
-                  <div className="flex gap-3">
-                    <button className="flex-1 bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center gap-2">
-                      <CheckCircle className="w-4 h-4" />
-                      Confirm Booking
-                    </button>
-                    <button className="flex-1 bg-gray-100 text-gray-700 py-2 px-4 rounded-lg hover:bg-gray-200 transition-colors flex items-center justify-center gap-2">
-                      <RefreshCw className="w-4 h-4" />
-                      Reschedule
-                    </button>
-                    <button className="bg-red-100 text-red-600 py-2 px-4 rounded-lg hover:bg-red-200 transition-colors flex items-center justify-center gap-2">
-                      <X className="w-4 h-4" />
-                      Cancel
-                    </button>
-                  </div>
-                </div>
-              ))
+              <div className="text-center py-12 text-gray-500">No Past Bookings</div>
             )}
           </motion.div>
         )}
 
-        {/* Past Bookings */}
-        {activeTab === 'past' && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="space-y-6"
-          >
-            {pastBookings.map((booking) => (
-              <div key={booking.id} className="bg-white rounded-xl shadow-lg p-6 border-l-4 border-gray-300">
-                <div className="flex items-start justify-between mb-4">
-                  <div>
-                    <h3 className="text-xl font-bold text-gray-800 mb-2">{booking.turf}</h3>
-                    <div className="flex items-center gap-4 text-gray-600">
-                      <div className="flex items-center gap-1">
-                        <Calendar className="w-4 h-4" />
-                        <span>{booking.date}</span>
-                      </div>
-                      <div className="flex items-center gap-1">
-                        <Clock className="w-4 h-4" />
-                        <span>{booking.time}</span>
-                      </div>
-                      <div className="flex items-center gap-1">
-                        <MapPin className="w-4 h-4" />
-                        <span>{booking.location}</span>
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <div className="text-right">
-                    <div className="text-2xl font-bold text-gray-600 mb-2">{booking.amount}</div>
-                    <span className={`px-3 py-1 rounded-full text-xs font-medium capitalize ${getStatusColor(booking.status)}`}>
-                      {booking.status}
-                    </span>
-                  </div>
-                </div>
-                
-                <div className="flex gap-3">
-                  <button className="flex-1 bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors">
-                    Book Again
-                  </button>
-                  <button className="flex-1 bg-gray-100 text-gray-700 py-2 px-4 rounded-lg hover:bg-gray-200 transition-colors">
-                    Write Review
-                  </button>
-                  <button className="bg-green-100 text-green-600 py-2 px-4 rounded-lg hover:bg-green-200 transition-colors">
-                    Download Receipt
-                  </button>
-                </div>
-              </div>
-            ))}
-          </motion.div>
-        )}
-
-        {/* Quick Actions */}
+        {/* CTA */}
         <div className="mt-12 bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl p-8 text-white text-center">
           <h2 className="text-2xl font-bold mb-4">Ready for Your Next Game?</h2>
           <p className="text-lg opacity-90 mb-6">Discover amazing turfs near you and book instantly</p>

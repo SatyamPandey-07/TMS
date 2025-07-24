@@ -1,6 +1,6 @@
 import mongoose, { model, models, Schema } from "mongoose";
 
-export interface Slot {
+export interface ISlot {
   turfId: mongoose.Types.ObjectId;
   date: string; // Format: YYYY-MM-DD
   startHour: number;
@@ -12,7 +12,7 @@ export interface Slot {
   updatedAt?: Date;
 }
 
-const SlotSchema = new Schema<Slot>(
+const SlotSchema = new Schema<ISlot>(
   {
     turfId: { type: Schema.Types.ObjectId, ref: "Turf", required: true },
     date: { type: String, required: true }, // 'YYYY-MM-DD'
@@ -24,6 +24,6 @@ const SlotSchema = new Schema<Slot>(
   { timestamps: true }
 );
 
-const Slot = models?.Slot || model<Slot>("Slot", SlotSchema);
+const Slot = models?.Slot || model<ISlot>("Slot", SlotSchema);
 
 export default Slot;

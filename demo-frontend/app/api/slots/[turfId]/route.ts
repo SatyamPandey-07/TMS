@@ -5,6 +5,8 @@ import { connectDb } from "@/lib/dbConnect";
 import Turf from "@/models/Turf";
 import Slot from "@/models/Slot";
 import dayjs from "dayjs";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
 
 export async function POST(req: NextRequest, { params }: { params: { turfId: string } }) {
   try {
@@ -43,23 +45,22 @@ export async function POST(req: NextRequest, { params }: { params: { turfId: str
       );
     }
 
+    // REMOVED: Lunch break validation error - now handled automatically in the loop
     console.log(`Lunch break: from=${turf.lunchBreak.from}, to=${turf.lunchBreak.to}`);
-    if (fromTime < turf.lunchBreak.to && toTime > turf.lunchBreak.from) {
-      console.log(`Requested time overlaps lunch break.`);
-      return NextResponse.json(
-        { error: `Slots cannot overlap lunch break (${turf.lunchBreak.from} - ${turf.lunchBreak.to})` },
-        { status: 400 }
-      );
-    }
 
     const slotDurationHours = turf.slotDuration / 60;
     console.log(`Slot duration in hours: ${slotDurationHours}`);
 
     const slotsToInsert = [];
+    const skippedLunchSlots = [];
 
     for (let time = fromTime; time < toTime; time += slotDurationHours) {
-      if (time >= turf.lunchBreak.from && time < turf.lunchBreak.to) {
-        console.log(`Skipping time ${time} due to lunch break.`);
+      const slotEndTime = time + slotDurationHours;
+      
+      // Check if this slot overlaps with lunch break
+      if (time < turf.lunchBreak.to && slotEndTime > turf.lunchBreak.from) {
+        console.log(`Skipping time ${time}-${slotEndTime} due to lunch break.`);
+        skippedLunchSlots.push({ startHour: time, endHour: slotEndTime });
         continue;
       }
 
@@ -68,11 +69,11 @@ export async function POST(req: NextRequest, { params }: { params: { turfId: str
         turfId: turf._id,
         date,
         startHour: time,
-        endHour: time + slotDurationHours,
+        endHour: slotEndTime,
       });
 
       if (existing) {
-        console.log(`Slot already exists: ${date} ${time} - ${time + slotDurationHours}, skipping.`);
+        console.log(`Slot already exists: ${date} ${time} - ${slotEndTime}, skipping.`);
         continue; // Skip existing slot
       }
 
@@ -80,13 +81,20 @@ export async function POST(req: NextRequest, { params }: { params: { turfId: str
         turfId: turf._id,
         date,
         startHour: time,
-        endHour: time + slotDurationHours,
+        endHour: slotEndTime,
       });
     }
 
     if (slotsToInsert.length === 0) {
       console.log("No new slots to insert.");
-      return NextResponse.json({ message: "No new slots to generate, all slots already exist" });
+      const message = skippedLunchSlots.length > 0 
+        ? "No new slots to generate. All requested slots either already exist or fall within lunch break hours."
+        : "No new slots to generate, all slots already exist";
+      
+      return NextResponse.json({ 
+        message,
+        skippedLunchSlots: skippedLunchSlots.length > 0 ? skippedLunchSlots : undefined
+      });
     }
 
     console.log(`Inserting ${slotsToInsert.length} new slots for turf ${turf._id} on date ${date}`);
@@ -94,12 +102,27 @@ export async function POST(req: NextRequest, { params }: { params: { turfId: str
     await Slot.insertMany(slotsToInsert);
 
     console.log("Slots successfully generated.");
-    return NextResponse.json({ message: "Slots generated", slots: slotsToInsert });
+    
+    const response = { 
+      message: "Slots generated", 
+      slots: slotsToInsert 
+    };
+
+    // Include info about skipped lunch slots if any
+    if (skippedLunchSlots.length > 0) {
+      response.message += ` (${skippedLunchSlots.length} slots skipped due to lunch break)`;
+      response.skippedLunchSlots = skippedLunchSlots;
+    }
+
+    return NextResponse.json(response);
+    
   } catch (error) {
     console.error("Error generating slots:", error);
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }
+
+
 export async function GET(_: NextRequest, { params }: { params: { turfId: string } }) {
   await connectDb();
   const date = dayjs().format("YYYY-MM-DD");

@@ -52,71 +52,10 @@ export default function TournamentsPage() {
         </div>
 
         {/* Tournaments Grid */}
-        <div className="grid lg:grid-cols-2 gap-8">
-            {tournaments.map((tournament, index) => (
-              <motion.div
-                key={tournament.id}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.1 }}
-                className="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition-all duration-300"
-              >
-                <div className="relative h-48">
-                  <img
-                    src={tournament.image}
-                    alt={tournament.name}
-                    className="w-full h-full object-cover"
-                  />
-                  <div className="absolute top-3 right-3 bg-purple-600 text-white px-3 py-1 rounded-full text-sm font-medium">
-                    {tournament.sport}
-                  </div>
-                </div>
-                
-                <div className="p-6">
-                  <h3 className="text-2xl font-bold mb-3">{tournament.name}</h3>
-                  
-                  <div className="space-y-2 mb-4">
-                    <div className="flex items-center gap-2 text-gray-600">
-                      <Calendar className="w-4 h-4" />
-                      <span>{tournament.date}</span>
-                    </div>
-                    
-                    <div className="flex items-center gap-2 text-gray-600">
-                      <MapPin className="w-4 h-4" />
-                      <span>{tournament.location}</span>
-                    </div>
-                    
-                    <div className="flex items-center gap-2 text-gray-600">
-                      <Users className="w-4 h-4" />
-                      <span>{tournament.participants}/{tournament.maxParticipants} participants</span>
-                    </div>
-                  </div>
-                  
-                  <div className="flex items-center justify-between mb-4">
-                    <div>
-                      <span className="text-sm text-gray-500">Prize Pool</span>
-                      <div className="text-2xl font-bold text-green-600">{tournament.prize}</div>
-                    </div>
-                    
-                    <div className="text-right">
-                      <span className="text-sm text-gray-500">Status</span>
-                      <div className="text-sm font-medium text-blue-600">{tournament.status}</div>
-                    </div>
-                  </div>
-                  
-                  <div className="flex gap-3">
-                    <button className="flex-1 bg-purple-600 text-white py-2 rounded-lg hover:bg-purple-700 transition-colors">
-                      Register Now
-                    </button>
-                    <button className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
-                      View Details
-                    </button>
-                  </div>
-                </div>
-              </motion.div>
-            ))}
+        <div>
+          Under construction
         </div>
-      </div>
+        </div>
     </DashboardLayout>
   );
 }

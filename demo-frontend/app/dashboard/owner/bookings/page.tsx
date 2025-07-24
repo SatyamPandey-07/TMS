@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
-import { CalendarIcon, UserIcon, CurrencyRupeeIcon, ClockIcon } from '@heroicons/react/24/outline';
+import { CalendarIcon, UserIcon, CurrencyRupeeIcon, ClockIcon, ChevronDownIcon } from '@heroicons/react/24/outline';
 import DashboardLayout from '@/components/DashboardLayout';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -29,7 +29,10 @@ type Booking = {
 
 export default function BookingsPage() {
   const [bookings, setBookings] = useState<Booking[]>([]);
+  const [filteredBookings, setFilteredBookings] = useState<Booking[]>([]);
   const [loading, setLoading] = useState(true);
+  const [filterType, setFilterType] = useState<'upcoming' | 'past'>('upcoming');
+  const [dropdownOpen, setDropdownOpen] = useState(false);
 
   useEffect(() => {
     const fetchBookings = async () => {
@@ -50,6 +53,27 @@ export default function BookingsPage() {
     fetchBookings();
   }, []);
 
+  // Filter bookings based on current time and selected filter
+  useEffect(() => {
+    const currentDateTime = new Date();
+    
+    const filtered = bookings.filter(booking => {
+      // Parse the booking date and time
+      const bookingDate = booking.slotId.date;
+      const endHour = parseInt(booking.slotId.endHour);
+      const bookingDateTime = new Date(bookingDate);
+      bookingDateTime.setHours(endHour, 0, 0, 0);
+      
+      if (filterType === 'upcoming') {
+        return bookingDateTime >= currentDateTime;
+      } else {
+        return bookingDateTime < currentDateTime;
+      }
+    });
+
+    setFilteredBookings(filtered);
+  }, [bookings, filterType]);
+
   const getStatusColor = (status: string) => {
     switch (status.toLowerCase()) {
       case 'confirmed': return 'bg-green-500';
@@ -57,6 +81,11 @@ export default function BookingsPage() {
       case 'cancelled': return 'bg-red-500';
       default: return 'bg-gray-500';
     }
+  };
+
+  const handleFilterChange = (type: 'upcoming' | 'past') => {
+    setFilterType(type);
+    setDropdownOpen(false);
   };
 
   return (
@@ -75,6 +104,49 @@ export default function BookingsPage() {
             <p className="text-gray-600 dark:text-gray-400 mt-1">
               Monitor and manage all turf bookings
             </p>
+          </div>
+
+          {/* Filter Dropdown */}
+          <div className="relative">
+            <button
+              onClick={() => setDropdownOpen(!dropdownOpen)}
+              className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm hover:shadow-md transition-all duration-200 text-gray-700 dark:text-gray-300"
+            >
+              <span className="capitalize">{filterType} Bookings</span>
+              <ChevronDownIcon className={`w-4 h-4 transition-transform duration-200 ${dropdownOpen ? 'rotate-180' : ''}`} />
+            </button>
+
+            {dropdownOpen && (
+              <motion.div
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                className="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg shadow-lg z-10"
+              >
+                <div className="py-1">
+                  <button
+                    onClick={() => handleFilterChange('upcoming')}
+                    className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors ${
+                      filterType === 'upcoming' 
+                        ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400' 
+                        : 'text-gray-700 dark:text-gray-300'
+                    }`}
+                  >
+                    Upcoming Bookings
+                  </button>
+                  <button
+                    onClick={() => handleFilterChange('past')}
+                    className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors ${
+                      filterType === 'past' 
+                        ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400' 
+                        : 'text-gray-700 dark:text-gray-300'
+                    }`}
+                  >
+                    Past Bookings
+                  </button>
+                </div>
+              </motion.div>
+            )}
           </div>
         </motion.div>
 
@@ -100,9 +172,11 @@ export default function BookingsPage() {
           <Card className="p-6 shadow-girly dark:shadow-manly">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600 dark:text-gray-400">Today&apos;s Bookings</p>
+                <p className="text-sm text-gray-600 dark:text-gray-400">
+                  {filterType === 'upcoming' ? 'Upcoming' : 'Past'} Bookings
+                </p>
                 <p className="text-2xl font-bold text-green-600 dark:text-green-400">
-                  {bookings.filter(b => new Date(b.createdAt).toDateString() === new Date().toDateString()).length}
+                  {filteredBookings.length}
                 </p>
               </div>
               <div className="w-12 h-12 bg-gradient-to-br from-green-400 to-blue-400 rounded-full flex items-center justify-center">
@@ -147,7 +221,7 @@ export default function BookingsPage() {
           transition={{ delay: 0.2 }}
           className="space-y-4"
         >
-          {bookings.map((booking, index) => (
+          {filteredBookings.map((booking, index) => (
             <motion.div
               key={booking._id}
               initial={{ opacity: 0, x: -20 }}
@@ -201,7 +275,7 @@ export default function BookingsPage() {
         </motion.div>
 
         {/* Empty State */}
-        {bookings.length === 0 && !loading && (
+        {filteredBookings.length === 0 && !loading && (
           <motion.div
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
@@ -210,11 +284,24 @@ export default function BookingsPage() {
             <div className="w-24 h-24 bg-gradient-to-br from-pink-400 to-purple-400 dark:from-blue-400 dark:to-red-400 rounded-full flex items-center justify-center mx-auto mb-6">
               <CalendarIcon className="w-12 h-12 text-white" />
             </div>
-            <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">No bookings yet</h3>
+            <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
+              No {filterType} bookings
+            </h3>
             <p className="text-gray-600 dark:text-gray-400">
-              Your bookings will appear here once customers start booking your turfs
+              {filterType === 'upcoming' 
+                ? "No upcoming bookings found. New bookings will appear here."
+                : "No past bookings found. Completed bookings will appear here."
+              }
             </p>
           </motion.div>
+        )}
+
+        {/* Click outside to close dropdown */}
+        {dropdownOpen && (
+          <div 
+            className="fixed inset-0 z-0" 
+            onClick={() => setDropdownOpen(false)}
+          />
         )}
       </div>
     </DashboardLayout>

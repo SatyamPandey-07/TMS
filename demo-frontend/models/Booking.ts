@@ -2,7 +2,7 @@ import mongoose, { model, models, Schema } from "mongoose";
 
 
 
-export interface Booking{
+export interface IBooking{
     userId: mongoose.Types.ObjectId,
     slotId: mongoose.Types.ObjectId,
     turfId: mongoose.Types.ObjectId,
@@ -17,7 +17,7 @@ export interface Booking{
 
 }
 
-const BookingSchema = new Schema<Booking>(
+const BookingSchema = new Schema<IBooking>(
     {
 
         userId: { type: Schema.Types.ObjectId, ref: 'User' },
@@ -43,6 +43,6 @@ const BookingSchema = new Schema<Booking>(
 
 
 
-const Booking = models?.Booking || model<Booking>("Booking", BookingSchema);
+const Booking = models?.Booking || model<IBooking>("Booking", BookingSchema);
 
 export default Booking;

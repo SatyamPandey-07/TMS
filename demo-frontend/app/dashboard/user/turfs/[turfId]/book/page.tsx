@@ -50,7 +50,7 @@ export default function PaymentPage({ params }: { params: { turfId: string } }) 
       });
 
       if (res.data.success) {
-        router.push(`/dashboard/user/display-turf`);
+        router.push(`/dashboard`);
       } else {
         alert('Payment failed: ' + (res.data.error || 'Unknown error'));
       }
