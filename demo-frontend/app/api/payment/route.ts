@@ -4,7 +4,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import Turf from '@/models/Turf';
 import Slot from '@/models/Slot';
 import Booking from '@/models/Booking';                // import Booking model
-import { sendBookingConfirmationEmail } from '@/lib/sendEmail';
+import User from '@/models/User';
+import { sendBookingReceiptEmail } from '@/lib/sendEmail';
 import { connectDb } from '@/lib/dbConnect';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
@@ -45,20 +46,33 @@ export async function POST(req: NextRequest) {
       slotId,
       status: 'confirmed',
       paymentreceived: amount,
-      paymentremain: turf.priceBase ? (turf.priceBase-amount):0,
+      paymentremain: turf.pricePerHour ? (Number(turf.pricePerHour) - amount) : 0,
       // You can add paymentId if you have one
     });
 
     await booking.save();
 
-    // Send confirmation email
-    await sendBookingConfirmationEmail({
-      to: email,
+    // Get user information for the receipt
+    const user = await User.findById(userId);
+    
+    if (!user) {
+      return NextResponse.json({ error: 'User not found' }, { status: 400 });
+    }
+
+    // Send PDF receipt email
+    await sendBookingReceiptEmail({
+      bookingId: booking._id.toString(),
+      userName: user.name,
+      userEmail: email,
       turfName: turf.name,
       location: turf.location,
-      slotTime: `${slot.startHour} - ${slot.endHour}`,  // Adjust field names here if needed
+      date: slot.date,
+      timeSlot: `${slot.startHour} - ${slot.endHour}`,
       advancePaid: amount,
-      remainingPayment: turf.priceBase ? turf.priceBase * 0.5 : 0,
+      remainingPayment: turf.pricePerHour ? (Number(turf.pricePerHour) - amount) : 0,
+      totalAmount: turf.pricePerHour ? Number(turf.pricePerHour) : amount,
+      bookingDate: new Date().toLocaleDateString(),
+      sport: turf.sport || 'Not specified',
     });
 
     return NextResponse.json({ success: true, bookingId: booking._id });

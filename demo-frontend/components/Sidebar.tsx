@@ -66,7 +66,7 @@ export default function Sidebar({ type }: SidebarProps) {
     <motion.div
       initial={{ x: -280 }}
       animate={{ x: 0 }}
-      className="fixed left-0 top-0 h-full w-72 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 shadow-xl z-40 transition-colors duration-200"
+      className="fixed left-0 top-16 h-[calc(100vh-4rem)] w-72 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 shadow-xl z-30 transition-colors duration-200"
     >
       {/* Header */}
       <div className="p-6 border-b border-gray-200 dark:border-gray-700">

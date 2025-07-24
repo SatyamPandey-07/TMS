@@ -17,7 +17,7 @@ import {
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import ThemeToggle from '@/components/ThemeToggle'
+import Navbar from '@/components/Navbar'
 import Chatbot from '@/components/Chatbot'
 import Link from 'next/link'
 
@@ -69,40 +69,7 @@ export default function HomePage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50/30 dark:from-gray-900 dark:to-blue-900/20">
       {/* Header */}
-      <header className="bg-white/90 dark:bg-gray-900/90 backdrop-blur-sm border-b border-gray-200 dark:border-gray-700 sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
-            <div className="flex items-center space-x-2">
-              <div className="w-8 h-8 bg-gradient-to-r from-green-400 to-blue-500 rounded-lg flex items-center justify-center">
-                <span className="text-white font-bold text-lg">T</span>
-              </div>
-              <h1 className="text-xl font-bold text-gray-900 dark:text-white">TurfMaster</h1>
-            </div>
-            
-            <nav className="hidden md:flex items-center space-x-8">
-              <Link href="/explore" className="text-gray-600 dark:text-gray-300 hover:text-blue-600 transition-colors">
-                Explore
-              </Link>
-              <Link href="/tournaments" className="text-gray-600 dark:text-gray-300 hover:text-blue-600 transition-colors">
-                Tournaments
-              </Link>
-              <Link href="/about" className="text-gray-600 dark:text-gray-300 hover:text-blue-600 transition-colors">
-                About
-              </Link>
-            </nav>
-
-            <div className="flex items-center space-x-4">
-              <ThemeToggle />
-              <Link href="/login">
-                <Button variant="ghost">Login</Button>
-              </Link>
-              <Link href="/register">
-                <Button variant="gradient">Get Started</Button>
-              </Link>
-            </div>
-          </div>
-        </div>
-      </header>
+      <Navbar />
 
       {/* Hero Section */}
       <section className="relative pt-20 pb-32 overflow-hidden">
