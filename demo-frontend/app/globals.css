@@ -1,0 +1,267 @@
+@import "tailwindcss";
+
+/* Professional Light Mode Theme - Pure Awwwards Style */
+:root {
+  --background: 0 0% 100%;              /* Pure white */
+  --foreground: 0 0% 9%;                /* Deep black text */
+  --card: 0 0% 100%;                    /* Pure white cards */
+  --card-foreground: 0 0% 9%;           /* Deep black card text */
+  --popover: 0 0% 100%;                 /* Pure white popover */
+  --popover-foreground: 0 0% 9%;        /* Deep black popover text */
+  --primary: 262 83% 58%;               /* Modern purple primary */
+  --primary-foreground: 0 0% 100%;      /* White text on primary */
+  --secondary: 210 40% 98%;             /* Light gray secondary */
+  --secondary-foreground: 0 0% 9%;      /* Deep black secondary text */
+  --muted: 210 40% 96%;                 /* Light muted */
+  --muted-foreground: 0 0% 45%;         /* Gray muted text */
+  --accent: 210 40% 96%;                /* Light accent */
+  --accent-foreground: 0 0% 9%;         /* Deep black accent text */
+  --destructive: 0 84% 60%;             /* Red destructive */
+  --destructive-foreground: 0 0% 98%;   /* White destructive text */
+  --border: 214 32% 91%;                /* Light border */
+  --input: 214 32% 91%;                 /* Light input */
+  --ring: 262 83% 58%;                  /* Purple focus ring */
+  --radius: 0.75rem;                    /* Modern radius */
+  
+  /* Professional shadows */
+  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  --shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+  --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+}
+
+/* Professional Dark Mode Theme - Pure Awwwards Style */
+.dark {
+  --background: 0 0% 7%;                /* Pure dark background */
+  --foreground: 0 0% 98%;               /* Pure white text */
+  --card: 0 0% 10%;                     /* Dark cards */
+  --card-foreground: 0 0% 98%;          /* Pure white card text */
+  --popover: 0 0% 7%;                   /* Dark popover */
+  --popover-foreground: 0 0% 98%;       /* Pure white popover text */
+  --primary: 262 83% 58%;               /* Modern purple primary */
+  --primary-foreground: 0 0% 100%;      /* White text on primary */
+  --secondary: 217 33% 17%;             /* Dark secondary */
+  --secondary-foreground: 0 0% 98%;     /* Pure white secondary text */
+  --muted: 217 33% 17%;                 /* Dark muted */
+  --muted-foreground: 0 0% 65%;         /* Light gray muted text */
+  --accent: 217 33% 17%;                /* Dark accent */
+  --accent-foreground: 0 0% 98%;        /* Pure white accent text */
+  --destructive: 0 84% 60%;             /* Red destructive */
+  --destructive-foreground: 0 0% 98%;   /* White destructive text */
+  --border: 217 33% 17%;                /* Dark border */
+  --input: 217 33% 17%;                 /* Dark input */
+  --ring: 262 83% 58%;                  /* Purple focus ring */
+  --radius: 0.75rem;                    /* Modern radius */
+  
+  /* Professional dark shadows */
+  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.8);
+  --shadow: 0 1px 3px 0 rgb(0 0 0 / 0.8), 0 1px 2px -1px rgb(0 0 0 / 0.8);
+  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.8), 0 2px 4px -2px rgb(0 0 0 / 0.8);
+  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.8), 0 4px 6px -4px rgb(0 0 0 / 0.8);
+  --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.8), 0 8px 10px -6px rgb(0 0 0 / 0.8);
+}
+
+/* Base body styling */
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  color: hsl(var(--foreground));
+  background: hsl(var(--background));
+  line-height: 1.6;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Global element styling */
+* {
+  border-color: hsl(var(--border));
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Professional gradient backgrounds */
+.gradient-radial {
+  background: radial-gradient(ellipse at center, transparent 0%, hsl(var(--background)) 70%);
+}
+
+.gradient-conic {
+  background: conic-gradient(
+    from 180deg at 50% 50%,
+    var(--tw-gradient-stops)
+  );
+}
+
+/* Modern glass effect */
+.glass {
+  backdrop-filter: blur(16px) saturate(180%);
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.125);
+}
+
+.dark .glass {
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Professional animations */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideInLeft {
+  from {
+    opacity: 0;
+    transform: translateX(-30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes slideInRight {
+  from {
+    opacity: 0;
+    transform: translateX(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes scaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Animation utility classes */
+.animate-fade-in-up {
+  animation: fadeInUp 0.6s ease-out;
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.5s ease-out;
+}
+
+.animate-slide-in-left {
+  animation: slideInLeft 0.5s ease-out;
+}
+
+.animate-slide-in-right {
+  animation: slideInRight 0.5s ease-out;
+}
+
+.animate-scale-in {
+  animation: scaleIn 0.3s ease-out;
+}
+
+.animate-spin {
+  animation: spin 1s linear infinite;
+}
+
+/* Professional hover effects */
+.hover-lift {
+  transition: transform 0.2s ease-out;
+}
+
+.hover-lift:hover {
+  transform: translateY(-2px);
+}
+
+.hover-scale {
+  transition: transform 0.2s ease-out;
+}
+
+.hover-scale:hover {
+  transform: scale(1.02);
+}
+
+/* Professional shadows */
+.shadow-elegant {
+  box-shadow: var(--shadow-lg);
+}
+
+.shadow-elegant-sm {
+  box-shadow: var(--shadow-sm);
+}
+
+.shadow-elegant-md {
+  box-shadow: var(--shadow-md);
+}
+
+.shadow-elegant-xl {
+  box-shadow: var(--shadow-xl);
+}
+
+/* Focus states */
+.focus-ring {
+  outline: 2px solid transparent;
+  outline-offset: 2px;
+}
+
+.focus-ring:focus {
+  outline: 2px solid hsl(var(--ring));
+  outline-offset: 2px;
+}
+
+/* Text selection */
+::selection {
+  background-color: hsl(var(--primary) / 0.2);
+  color: hsl(var(--foreground));
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: hsl(var(--background));
+}
+
+::-webkit-scrollbar-thumb {
+  background: hsl(var(--muted-foreground) / 0.3);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: hsl(var(--muted-foreground) / 0.5);
+}
+
+.dark ::-webkit-scrollbar-thumb {
+  background: hsl(var(--muted-foreground) / 0.4);
+}
+
+.dark ::-webkit-scrollbar-thumb:hover {
+  background: hsl(var(--muted-foreground) / 0.6);
+}
