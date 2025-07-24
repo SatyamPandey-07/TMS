@@ -423,37 +423,41 @@ export default function ManageSlotsPage() {
               variants={fadeInUp}
               className="mb-6"
             >
-              <Card className="p-6 bg-white/95 dark:bg-gray-800/95">
+              <Card className="p-6 ">
                 <div className="flex flex-col lg:flex-row gap-4 items-center justify-between">
                   <div className="flex gap-2 flex-wrap">
                     <Button
-                      variant={filterType === 'all' ? 'default' : 'outline'}
-                      size="sm"
-                      onClick={() => setFilterType('all')}
-                    >
-                      All Slots
-                    </Button>
-                    <Button
-                      variant={filterType === 'today' ? 'default' : 'outline'}
-                      size="sm"
-                      onClick={() => setFilterType('today')}
-                    >
-                      Today
-                    </Button>
-                    <Button
-                      variant={filterType === 'tomorrow' ? 'default' : 'outline'}
-                      size="sm"
-                      onClick={() => setFilterType('tomorrow')}
-                    >
-                      Tomorrow
-                    </Button>
-                    <Button
-                      variant={filterType === 'custom' ? 'default' : 'outline'}
-                      size="sm"
-                      onClick={() => setFilterType('custom')}
-                    >
-                      Custom Date
-                    </Button>
+                    variant={filterType === 'today' ? 'default' : 'outline'}
+                    size="sm"
+                    onClick={() => setFilterType('today')}
+                  >
+                    Today
+                  </Button>
+
+                  <Button
+                    variant={filterType === 'tomorrow' ? 'default' : 'outline'}
+                    size="sm"
+                    onClick={() => setFilterType('tomorrow')}
+                  >
+                    Tomorrow
+                  </Button>
+
+                  <Button
+                    variant={filterType === 'all' ? 'default' : 'outline'}
+                    size="sm"
+                    onClick={() => setFilterType('all')}
+                  >
+                    All Slots
+                  </Button>
+
+                  <Button
+                    variant={filterType === 'custom' ? 'default' : 'outline'}
+                    size="sm"
+                    onClick={() => setFilterType('custom')}
+                  >
+                    Custom Date
+                  </Button>
+
                     {filterType === 'custom' && (
                       <Input
                         type="date"

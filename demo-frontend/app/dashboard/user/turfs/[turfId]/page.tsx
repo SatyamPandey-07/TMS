@@ -255,6 +255,10 @@ export default function TurfPage({ params }: { params: { turfId: string } }) {
                         <Calendar className="w-5 h-5" />
                         <span>{formatTime(slot.startHour)} - {formatTime(slot.endHour)}</span>
                       </div>
+                      <div className="flex flex-col items-center gap-2">
+                        
+                        <span>{slot.date}</span>
+                      </div>
                       
                       <div className="absolute inset-0 bg-white/20 opacity-0 group-hover:opacity-100 transition-opacity rounded-xl"></div>
                     </button>
@@ -288,6 +292,7 @@ export default function TurfPage({ params }: { params: { turfId: string } }) {
                     <div className="flex flex-col items-center gap-2">
                       <XCircle className="w-5 h-5" />
                       <span>{formatTime(slot.startHour)} - {formatTime(slot.endHour)}</span>
+                       <span>{slot.date}</span>
                     </div>
                   </div>
                 ))}

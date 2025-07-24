@@ -3,6 +3,7 @@ import { Geist, Geist_Mono, Dancing_Script, Oswald, Poppins, Roboto } from "next
 import "./globals.css";
 import SessionWrapper from "@/components/SessionWrapper";
 import { ThemeProvider } from "@/components/ThemeProvider";
+import Chatbot from "@/components/Chatbot";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -57,6 +58,7 @@ export default function RootLayout({
         <ThemeProvider>
           <SessionWrapper>
             {children}
+            <Chatbot />
           </SessionWrapper>
         </ThemeProvider>
       </body>

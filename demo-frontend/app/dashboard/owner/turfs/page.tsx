@@ -47,17 +47,28 @@ export default function MyTurfsPage() {
   }, []);
 
   const handleDeleteTurf = async (turfId: string) => {
-    if (!confirm('Are you sure you want to delete this turf?')) return;
-    
-    try {
-      // Add delete API call here
-      console.log('Deleting turf:', turfId);
-      // Refresh list after deletion
-      setTurfs(prev => prev.filter(turf => turf._id !== turfId));
-    } catch (error) {
-      console.error('Error deleting turf:', error);
+  if (!confirm('Are you sure you want to delete this turf?')) return;
+
+  try {
+    const response = await fetch(`/api/delete-turf?id=${turfId}`, {
+      method: 'DELETE',
+    });
+
+    const result = await response.json();
+
+    if (!response.ok) {
+      console.error('Failed to delete turf:', result.error);
+      alert(result.error || 'Failed to delete turf.');
+      return;
     }
-  };
+
+    // Refresh list after deletion
+    setTurfs(prev => prev.filter(turf => turf._id !== turfId));
+  } catch (error) {
+    console.error('Error deleting turf:', error);
+    alert('Error deleting turf.');
+  }
+};
 
   if (loading) {
     return (

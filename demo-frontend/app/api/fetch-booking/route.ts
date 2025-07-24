@@ -5,6 +5,9 @@ import { connectDb } from '@/lib/dbConnect';
 import Booking from '@/models/Booking';
 import Turf from '@/models/Turf';
 import Slot from '@/models/Slot';
+import User from '@/models/User';
+import mongoose from 'mongoose';
+
 
 export const GET = async (req: NextRequest) => {
   await connectDb();
@@ -17,6 +20,18 @@ export const GET = async (req: NextRequest) => {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
+  if (!mongoose.models.Slot) {
+    require('@/models/Slot');
+  }
+  if (!mongoose.models.Booking) {
+    require('@/models/Booking');
+  }
+  if (!mongoose.models.Turf) {
+    require('@/models/Turf');
+  }
+  if (!mongoose.models.User) {
+    require('@/models/User');
+  }
   try {
     // Step 1: Find all turfs owned by this owner
     const turfs = await Turf.find({ ownerId: ownerId }).select('_id');
@@ -31,11 +46,22 @@ export const GET = async (req: NextRequest) => {
     }
 
     // Step 2: Fetch bookings for those turfs
-    const bookings = await Booking.find({ turfId: { $in: turfIds } })
-      .populate('userId', 'name email') // optional
-      .populate('slotId') // to get date/time
-      .populate('turfId', 'name location') // to get turf info
-      .sort({ createdAt: -1 });
+    // Step 2: Fetch bookings for those turfs
+const bookings = await Booking.find({ turfId: { $in: turfIds } })
+.populate({
+    path: 'userId',
+    select: 'name email'
+  })
+  .populate({
+    path: 'slotId',
+    model: 'Slot' // explicitly specify the model
+  })
+  .populate({
+    path: 'turfId',
+    select: 'name location'
+  })
+  .sort({ createdAt: -1 });
+
 
     return NextResponse.json({ bookings }, { status: 200 });
 

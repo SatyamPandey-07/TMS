@@ -23,6 +23,7 @@ export default function PaymentPage({ params }: { params: { turfId: string } }) 
       try {
         console.log(params.turfId)
         const res = await axios.get(`/api/fetch-turf-user/${params.turfId}`);
+                
         setTurf(res.data);
       } catch (err) {
         console.error('Failed to fetch turf:', err);
@@ -43,23 +44,32 @@ export default function PaymentPage({ params }: { params: { turfId: string } }) 
 
     setPaymentLoading(true);
     try {
-      const res = await axios.post('/api/payment', {
-        turfId: params.turfId,
-        slotId,
-        amount: turf.advamt,
-      });
+        const res = await axios.post('/api/payment', {
+          turfId: params.turfId,
+          slotId,
+          amount: turf.advamt,
+        });
 
-      if (res.data.success) {
-        router.push(`/dashboard`);
-      } else {
-        alert('Payment failed: ' + (res.data.error || 'Unknown error'));
+        // Only successful 2xx responses reach here
+        if (res.data.success) {
+          router.push(`/dashboard`);
+        } else {
+          alert('Payment failed: ' + (res.data.error || 'Unknown error'));
+        }
+      } catch (err: any) {
+        console.error(err);
+
+        if (err.response?.status === 405) {
+          alert("Someone booked the slot already, sorry for the inconvenience");
+        } else if (err.response?.data?.error) {
+          alert("Payment failed: " + err.response.data.error);
+        } else {
+          alert('Something went wrong');
+        }
+      } finally {
+        setPaymentLoading(false);
       }
-    } catch (err) {
-      console.error(err);
-      alert('Something went wrong');
-    } finally {
-      setPaymentLoading(false);
-    }
+
   };
 
   // Loading state

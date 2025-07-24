@@ -17,7 +17,8 @@ import {
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import ThemeToggle from '@/components/ThemeToggle'
+import Navbar from '@/components/Navbar'
+import Chatbot from '@/components/Chatbot'
 import Link from 'next/link'
 
 const fadeInUp = {
@@ -68,40 +69,7 @@ export default function HomePage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50/30 dark:from-gray-900 dark:to-blue-900/20">
       {/* Header */}
-      <header className="bg-white/80 dark:bg-gray-900/80 backdrop-blur-md border-b border-gray-200 dark:border-gray-700 sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
-            <div className="flex items-center space-x-2">
-              <div className="w-8 h-8 bg-gradient-to-r from-green-400 to-blue-500 rounded-lg flex items-center justify-center">
-                <span className="text-white font-bold text-lg">T</span>
-              </div>
-              <h1 className="text-xl font-bold text-gray-900 dark:text-white">TurfMaster</h1>
-            </div>
-            
-            <nav className="hidden md:flex items-center space-x-8">
-              <Link href="/explore" className="text-gray-600 dark:text-gray-300 hover:text-blue-600 transition-colors">
-                Explore
-              </Link>
-              <Link href="/tournaments" className="text-gray-600 dark:text-gray-300 hover:text-blue-600 transition-colors">
-                Tournaments
-              </Link>
-              <Link href="/about" className="text-gray-600 dark:text-gray-300 hover:text-blue-600 transition-colors">
-                About
-              </Link>
-            </nav>
-
-            <div className="flex items-center space-x-4">
-              <ThemeToggle />
-              <Link href="/login">
-                <Button variant="ghost">Login</Button>
-              </Link>
-              <Link href="/register">
-                <Button variant="gradient">Get Started</Button>
-              </Link>
-            </div>
-          </div>
-        </div>
-      </header>
+      <Navbar />
 
       {/* Hero Section */}
       <section className="relative pt-20 pb-32 overflow-hidden">
@@ -131,13 +99,13 @@ export default function HomePage() {
             </motion.div>
 
             <motion.div variants={fadeInUp} className="flex flex-col sm:flex-row gap-4 justify-center mb-16">
-              <Link href="/explore">
+              <Link href="/login">
                 <Button size="lg" className="bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600 text-white px-8 py-6 text-lg">
                   <Play className="mr-2 h-5 w-5" />
                   Explore Turfs
                 </Button>
               </Link>
-              <Link href="/tournaments">
+              <Link href="/login">
                 <Button variant="outline" size="lg" className="px-8 py-6 text-lg border-2">
                   <Trophy className="mr-2 h-5 w-5" />
                   Join Tournaments
@@ -166,7 +134,7 @@ export default function HomePage() {
       </section>
 
       {/* Features Section */}
-      <section className="py-20 bg-white/50 dark:bg-gray-800/50 backdrop-blur-sm">
+      <section className="py-20 bg-white/70 dark:bg-gray-800/70">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <motion.div
             initial="initial"
@@ -177,7 +145,7 @@ export default function HomePage() {
           >
             <motion.div variants={fadeInUp}>
               <Badge variant="secondary" className="mb-4">
-                ⚡ Why Choose TurfMaster
+                ⚡ Why Choose TurfChale
               </Badge>
               <h2 className="text-4xl font-bold text-gray-900 dark:text-white mb-6">
                 Everything You Need for the Perfect Game
@@ -197,7 +165,7 @@ export default function HomePage() {
           >
             {features.map((feature, index) => (
               <motion.div key={index} variants={fadeInUp}>
-                <Card className="p-6 h-full text-center group hover:shadow-xl transition-all duration-300 hover:-translate-y-2 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm border-0 shadow-lg">
+                <Card className="p-6 h-full text-center group hover:shadow-xl transition-all duration-300 hover:-translate-y-2 bg-white/90 dark:bg-gray-800/90 border-0 shadow-lg">
                   <div className="w-16 h-16 bg-gradient-to-r from-green-400 to-blue-500 rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform duration-300">
                     <feature.icon className="h-8 w-8 text-white" />
                   </div>
@@ -308,6 +276,9 @@ export default function HomePage() {
           </div>
         </div>
       </footer>
+
+      {/* Chatbot */}
+      <Chatbot />
     </div>
   )
 }

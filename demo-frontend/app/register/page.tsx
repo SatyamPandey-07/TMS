@@ -88,9 +88,7 @@ export default function RegisterPage() {
       </div>
 
       {/* Theme Toggle - Fixed Position */}
-      <div className="fixed top-6 right-6 z-50">
-        <ThemeToggle />
-      </div>
+     
 
       <div className="w-full max-w-6xl grid lg:grid-cols-2 gap-8 items-center relative z-10">
         {/* Left Side - Branding */}

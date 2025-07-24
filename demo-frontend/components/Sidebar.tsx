@@ -39,9 +39,7 @@ const userMenuItems: SidebarItem[] = [
   { name: 'Dashboard', href: '/dashboard', icon: Home },
   { name: 'Explore Turfs', href: '/explore', icon: Search },
   { name: 'My Bookings', href: '/bookings', icon: Calendar },
-  { name: 'Tournaments', href: '/tournaments', icon: Trophy },
   { name: 'Profile', href: '/profile', icon: User },
-  { name: 'Notifications', href: '/notifications', icon: Bell, badge: '3' },
   { name: 'Settings', href: '/settings', icon: Settings },
 ]
 
@@ -51,10 +49,7 @@ const ownerMenuItems: SidebarItem[] = [
   { name: 'Add New Turf', href: '/dashboard/owner/add-turf', icon: Plus },
   { name: 'Manage Slots', href: '/dashboard/owner/slots', icon: Clock },
   { name: 'Bookings', href: '/dashboard/owner/bookings', icon: Calendar },
-  { name: 'Analytics', href: '/dashboard/owner/analytics', icon: BarChart3 },
-  { name: 'Reviews', href: '/dashboard/owner/reviews', icon: Star },
-  { name: 'Payments', href: '/dashboard/owner/payments', icon: CreditCard },
-  { name: 'Customers', href: '/dashboard/owner/customers', icon: Users },
+
   { name: 'Settings', href: '/dashboard/owner/settings', icon: Settings },
 ]
 
@@ -76,7 +71,7 @@ export default function Sidebar({ type }: SidebarProps) {
               <span className="text-white font-bold text-lg">T</span>
             </div>
             <div>
-              <h1 className="text-xl font-bold text-gray-900 dark:text-white">TurfMaster</h1>
+              <h1 className="text-xl font-bold text-gray-900 dark:text-white">TurfChale</h1>
               <p className="text-xs text-gray-500 dark:text-gray-400 capitalize">{type} Panel</p>
             </div>
           </div>
