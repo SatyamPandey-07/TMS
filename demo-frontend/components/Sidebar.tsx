@@ -1,0 +1,124 @@
+'use client'
+
+import { motion } from 'framer-motion'
+import Link from 'next/link'
+import { usePathname } from 'next/navigation'
+import { signOut } from 'next-auth/react'
+import { 
+  Home, 
+  Search, 
+  Calendar, 
+  User, 
+  Trophy, 
+  Settings, 
+  LogOut,
+  Plus,
+  BarChart3,
+  Clock,
+  Users,
+  MapPin,
+  Star,
+  CreditCard,
+  Bell
+} from 'lucide-react'
+import { Button } from '@/components/ui/button'
+
+interface SidebarItem {
+  name: string
+  href: string
+  icon: React.ComponentType<React.SVGProps<SVGSVGElement>>
+  badge?: string
+}
+
+interface SidebarProps {
+  type: 'user' | 'owner'
+}
+
+const userMenuItems: SidebarItem[] = [
+  { name: 'Dashboard', href: '/dashboard', icon: Home },
+  { name: 'Explore Turfs', href: '/explore', icon: Search },
+  { name: 'My Bookings', href: '/bookings', icon: Calendar },
+  { name: 'Profile', href: '/profile', icon: User },
+  { name: 'Settings', href: '/settings', icon: Settings },
+]
+
+const ownerMenuItems: SidebarItem[] = [
+  { name: 'Dashboard', href: '/dashboard/owner', icon: Home },
+  { name: 'My Turfs', href: '/dashboard/owner/turfs', icon: MapPin },
+  { name: 'Add New Turf', href: '/dashboard/owner/add-turf', icon: Plus },
+  { name: 'Manage Slots', href: '/dashboard/owner/slots', icon: Clock },
+  { name: 'Bookings', href: '/dashboard/owner/bookings', icon: Calendar },
+  { name: 'Analytics', href: '/dashboard/owner/analytics', icon: Calendar },
+  { name: 'Settings', href: '/dashboard/owner/settings', icon: Settings },
+]
+
+export default function Sidebar({ type }: SidebarProps) {
+  const pathname = usePathname()
+  const menuItems = type === 'user' ? userMenuItems : ownerMenuItems
+
+  return (
+    <div className="fixed left-0 top-0 h-full w-72 bg-card border-r border-border shadow-xl transition-colors duration-500 overflow-y-auto z-40">
+      {/* Header */}
+      <div className="p-6 border-b border-border">
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 bg-gradient-to-r from-green-500 to-blue-500 rounded-xl flex items-center justify-center">
+              <span className="text-white font-bold text-lg">T</span>
+            </div>
+            <div>
+              <h1 className="text-xl font-bold text-card-foreground">TurfChale</h1>
+              <p className="text-xs text-muted-foreground capitalize">{type} Panel</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Menu Items */}
+      <nav className="p-4 flex-1">
+        <ul className="space-y-2">
+          {menuItems.map((item) => {
+            const isActive = pathname === item.href
+            return (
+              <li key={item.name}>
+                <Link href={item.href}>
+                  <motion.div
+                    whileHover={{ x: 4 }}
+                    className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-500 group ${
+                      isActive
+                        ? 'bg-gradient-to-r from-green-500 to-blue-500 text-white shadow-lg'
+                        : 'text-card-foreground hover:bg-muted'
+                    }`}
+                  >
+                    <item.icon className={`w-5 h-5 ${isActive ? 'text-white' : 'text-muted-foreground group-hover:text-card-foreground'}`} />
+                    <span className="font-medium flex-1">{item.name}</span>
+                    {item.badge && (
+                      <span className={`px-2 py-1 text-xs rounded-full font-semibold ${
+                        isActive 
+                          ? 'bg-white/20 text-white' 
+                          : 'bg-red-500 text-white'
+                      }`}>
+                        {item.badge}
+                      </span>
+                    )}
+                  </motion.div>
+                </Link>
+              </li>
+            )
+          })}
+        </ul>
+      </nav>
+
+      {/* Footer */}
+      <div className="p-4 border-t border-gray-200 dark:border-gray-700">
+        <Button
+          variant="ghost"
+          className="w-full justify-start text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20"
+          onClick={() => signOut({ callbackUrl: '/login' })}
+        >
+          <LogOut className="w-4 h-4 mr-3" />
+          Sign Out
+        </Button>
+      </div>
+    </div>
+  )
+}
