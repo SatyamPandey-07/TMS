@@ -74,6 +74,8 @@ export default function AnalyticsPage() {
       }
       
       const data = await response.json();
+      console.log(data);
+      
       setAnalyticsData(data);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred');

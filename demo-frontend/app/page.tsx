@@ -12,7 +12,9 @@ import {
   ArrowRight,
   CheckCircle,
   Trophy,
-  Calendar
+  Calendar,
+  MessageCircle,  // For Discord
+  Instagram       // For Instagram
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
@@ -98,7 +100,8 @@ export default function HomePage() {
               </p>
             </motion.div>
 
-            <motion.div variants={fadeInUp} className="flex flex-col sm:flex-row gap-4 justify-center mb-16">
+            <motion.div variants={fadeInUp} className="flex flex-col items-center gap-6 mb-16">
+              {/* Main Action Button */}
               <Link href="/unprotected-explore">
                 <Button size="lg" className="bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600 text-white px-8 py-6 text-lg">
                   <Play className="mr-2 h-5 w-5" />
@@ -106,6 +109,45 @@ export default function HomePage() {
                 </Button>
               </Link>
               
+              {/* Community Links */}
+              <div className="flex flex-col sm:flex-row items-center gap-4">
+                <p className="text-gray-600 dark:text-gray-300 font-medium">
+                  Join our growing community:
+                </p>
+                <div className="flex gap-3">
+                  {/* Discord Link */}
+                  <Link 
+                    href="https://discord.gg/qnjyDGMtqy" 
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    <Button 
+                      variant="outline" 
+                      size="default"
+                      className="bg-indigo-50 border-indigo-200 text-indigo-700 hover:bg-indigo-100 hover:border-indigo-300 dark:bg-indigo-900/20 dark:border-indigo-700 dark:text-indigo-300 dark:hover:bg-indigo-900/30"
+                    >
+                      <MessageCircle className="mr-2 h-4 w-4" />
+                      Discord
+                    </Button>
+                  </Link>
+                  
+                  {/* Instagram Link */}
+                  <Link 
+                    href="https://www.instagram.com/turfchalo_com/" 
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    <Button 
+                      variant="outline" 
+                      size="default"
+                      className="bg-pink-50 border-pink-200 text-pink-700 hover:bg-pink-100 hover:border-pink-300 dark:bg-pink-900/20 dark:border-pink-700 dark:text-pink-300 dark:hover:bg-pink-900/30"
+                    >
+                      <Instagram className="mr-2 h-4 w-4" />
+                      Instagram
+                    </Button>
+                  </Link>
+                </div>
+              </div>
             </motion.div>
 
             {/* Stats */}
@@ -128,6 +170,7 @@ export default function HomePage() {
         </div>
       </section>
 
+      {/* Rest of your component remains the same... */}
       {/* Features Section */}
       <section className="py-20 bg-white/70 dark:bg-gray-800/70">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">

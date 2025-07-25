@@ -155,7 +155,7 @@ export default function OwnerDashboardPage() {
         transition={{ duration: 0.6, delay: 0.1 }}
         className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8"
       >
-        <Card className="p-6 bg-white dark:bg-gray-800">
+        {/* <Card className="p-6 bg-white dark:bg-gray-800">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Total Revenue</p>
@@ -165,7 +165,7 @@ export default function OwnerDashboardPage() {
               <DollarSign className="w-4 h-4 text-green-600 dark:text-green-400" />
             </div>
           </div>
-        </Card>
+        </Card> */}
 
         <Card className="p-6 bg-white dark:bg-gray-800">
           <div className="flex items-center justify-between">

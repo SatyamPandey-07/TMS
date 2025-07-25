@@ -40,7 +40,6 @@ const userMenuItems: SidebarItem[] = [
   { name: 'Explore Turfs', href: '/explore', icon: Search },
   { name: 'My Bookings', href: '/bookings', icon: Calendar },
   { name: 'Profile', href: '/profile', icon: User },
-  { name: 'Settings', href: '/settings', icon: Settings },
 ]
 
 const ownerMenuItems: SidebarItem[] = [
@@ -50,7 +49,7 @@ const ownerMenuItems: SidebarItem[] = [
   { name: 'Manage Slots', href: '/dashboard/owner/slots', icon: Clock },
   { name: 'Bookings', href: '/dashboard/owner/bookings', icon: Calendar },
   { name: 'Analytics', href: '/dashboard/owner/analytics', icon: Calendar },
-  { name: 'Settings', href: '/dashboard/owner/settings', icon: Settings },
+  
 ]
 
 export default function Sidebar({ type }: SidebarProps) {
@@ -71,11 +70,11 @@ export default function Sidebar({ type }: SidebarProps) {
               <span className="text-white font-bold text-lg">T</span>
             </div>
             <div>
-              <h1 className="text-xl font-bold text-gray-900 dark:text-white">TurfChale</h1>
+              <h1 className="text-xl font-bold text-gray-900 dark:text-white">TurfChalo</h1>
               <p className="text-xs text-gray-500 dark:text-gray-400 capitalize">{type} Panel</p>
             </div>
           </div>
-          <ThemeToggle />
+          
         </div>
       </div>
 

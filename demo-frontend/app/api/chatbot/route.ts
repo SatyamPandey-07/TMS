@@ -121,7 +121,7 @@ export async function POST(req: NextRequest) {
     const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
 
     const systemPrompt = `
-      You are an intelligent assistant for a turf booking platform called TurfMaster. The app helps users:
+      You are an intelligent assistant for a turf booking platform called TurfChalo. The app helps users:
       
       - Filter by your current location
       - View turf details: name, price/hour, location, and availability

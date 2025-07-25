@@ -60,12 +60,21 @@ export const GET = async (req: NextRequest) => {
     const paidBookings = bookings.filter(booking => booking.isPaymentReceived === true);
     const unpaidBookings = bookings.filter(booking => booking.isPaymentReceived === false);
 
+    console.log(paidBookings);
+    console.log(unpaidBookings);
+    
+    
+
+  
+    
     // Calculate weekly data
     const weeklyData = processWeeklyData(paidBookings);
     
     // Calculate metrics based on turf price and payment status
     const totalRevenue = paidBookings.reduce((sum, booking) => {
       const amount = booking.turfId?.priceBase || parseFloat(booking.paymentreceived || '0');
+      console.log(amount);
+      
       return sum + amount;
     }, 0);
 

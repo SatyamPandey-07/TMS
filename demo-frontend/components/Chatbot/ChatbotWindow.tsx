@@ -39,7 +39,7 @@ export default function ChatbotWindow({ isOpen, onClose }: ChatbotWindowProps) {
   const [messages, setMessages] = useState<Message[]>([
     {
       id: '1',
-      text: "Hello! 👋 Welcome to TurfMaster! I'm here to help you find and book the perfect turf for your game.",
+      text: "Hello! 👋 Welcome to TurfChalo! I'm here to help you find and book the perfect turf for your game.",
       sender: 'bot',
       timestamp: new Date()
     }
@@ -170,7 +170,7 @@ export default function ChatbotWindow({ isOpen, onClose }: ChatbotWindowProps) {
                 <CpuChipIcon className="w-5 h-5" />
               </div>
               <div>
-                <h3 className="font-semibold">TurfMaster Assistant</h3>
+                <h3 className="font-semibold">TurfChalo Assistant</h3>
                 <p className="text-xs opacity-80">Online now</p>
               </div>
             </div>

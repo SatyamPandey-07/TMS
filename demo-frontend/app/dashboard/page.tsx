@@ -116,19 +116,22 @@ export default function DashboardPage() {
 
   const today = new Date()
   const upcomingBookings = bookings.filter(booking =>
-    new Date(booking.slotId.date) >= today
-  ).slice(0, 3)
+  booking.slotId && booking.slotId.date && new Date(booking.slotId.date) >= today
+).slice(0, 3)
+
 
   const recentActivity = bookings
-    .sort((a, b) =>
-      new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-    )
-    .slice(0, 5)
-    .map(booking => ({
-      id: booking._id,
-      message: `Booked ${booking.turfId?.name || 'Turf'} for ${new Date(booking.slotId.date).toLocaleDateString()}`,
-      time: new Date(booking.createdAt).toLocaleDateString()
-    }))
+  .filter(booking => booking.slotId && booking.slotId.date) // Add filter first
+  .sort((a, b) =>
+    new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+  )
+  .slice(0, 5)
+  .map(booking => ({
+    id: booking._id,
+    message: `Booked ${booking.turfId?.name || 'Turf'} for ${new Date(booking.slotId.date).toLocaleDateString()}`,
+    time: new Date(booking.createdAt).toLocaleDateString()
+  }))
+
 
   if (loading) {
     return (
@@ -161,10 +164,7 @@ export default function DashboardPage() {
                 <div className="text-2xl font-bold">{stats.gamesPlayed}</div>
                 <div className="text-sm opacity-75">Games Played</div>
               </div>
-              <div className="text-center">
-                <div className="text-2xl font-bold">₹{stats.totalSpent}</div>
-                <div className="text-sm opacity-75">Total Spent</div>
-              </div>
+              
             </div>
           </div>
         </motion.div>

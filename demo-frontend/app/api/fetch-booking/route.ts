@@ -39,14 +39,14 @@ export const GET = async (req: NextRequest) => {
     
     const turfIds = turfs.map(t => t._id);
 
-    console.log(turfIds);
+    
     
     if (turfIds.length === 0) {
       return NextResponse.json({ bookings: [] });
     }
 
     // Step 2: Fetch bookings for those turfs
-    // Step 2: Fetch bookings for those turfs
+   
 const bookings = await Booking.find({ turfId: { $in: turfIds } })
 .populate({
     path: 'userId',
@@ -62,6 +62,8 @@ const bookings = await Booking.find({ turfId: { $in: turfIds } })
   })
   .sort({ createdAt: -1 });
 
+  console.log(bookings);
+  
 
     return NextResponse.json({ bookings }, { status: 200 });
 

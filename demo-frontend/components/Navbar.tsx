@@ -42,6 +42,9 @@ export default function Navbar({ showAuthButtons = true, className = '' }: Navba
     signOut({ callbackUrl: '/login' })
   }
 
+  // Check if user is admin
+  const isAdmin = session?.user?.role?.toLowerCase() === 'admin'
+
   return (
     <header className={`bg-white/90 dark:bg-gray-900/90 backdrop-blur-sm border-b border-gray-200 dark:border-gray-700 sticky top-0 z-50 ${className}`}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -51,26 +54,11 @@ export default function Navbar({ showAuthButtons = true, className = '' }: Navba
             <div className="w-8 h-8 bg-gradient-to-r from-green-400 to-blue-500 rounded-lg flex items-center justify-center">
               <span className="text-white font-bold text-lg">T</span>
             </div>
-            <h1 className="text-xl font-bold text-gray-900 dark:text-white">TurfChale</h1>
+            <h1 className="text-xl font-bold text-gray-900 dark:text-white">TurfChalo</h1>
           </Link>
           
           {/* Navigation Links */}
-          <nav className="hidden md:flex items-center space-x-8">
-            <Link href="/explore" className="text-gray-600 dark:text-gray-300 hover:text-blue-600 transition-colors">
-              Explore
-            </Link>
-            <Link href="/tournaments" className="text-gray-600 dark:text-gray-300 hover:text-blue-600 transition-colors">
-              Tournaments
-            </Link>
-            <Link href="/bookings" className="text-gray-600 dark:text-gray-300 hover:text-blue-600 transition-colors">
-              Bookings
-            </Link>
-            {session && (
-              <Link href="/dashboard" className="text-gray-600 dark:text-gray-300 hover:text-blue-600 transition-colors">
-                Dashboard
-              </Link>
-            )}
-          </nav>
+          
 
           {/* Right Side Actions */}
           <div className="flex items-center space-x-4">
@@ -111,25 +99,30 @@ export default function Navbar({ showAuthButtons = true, className = '' }: Navba
                       exit={{ opacity: 0, y: -10 }}
                       className="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 py-1"
                     >
-                      <Link
-                        href="/profile"
-                        className="flex items-center space-x-3 px-4 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
-                        onClick={() => setShowUserMenu(false)}
-                      >
-                        <User className="w-4 h-4" />
-                        <span>Profile</span>
-                      </Link>
+                      {/* Profile Link - Only show if user is NOT admin */}
+                      {!isAdmin && (
+                        <Link
+                          href="/profile"
+                          className="flex items-center space-x-3 px-4 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
+                          onClick={() => setShowUserMenu(false)}
+                        >
+                          <User className="w-4 h-4" />
+                          <span>Profile</span>
+                        </Link>
+                      )}
                       
-                      <Link
+                      {/* Uncomment if you want to add settings */}
+                      {/* <Link
                         href="/settings"
                         className="flex items-center space-x-3 px-4 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
                         onClick={() => setShowUserMenu(false)}
                       >
                         <Settings className="w-4 h-4" />
                         <span>Settings</span>
-                      </Link>
+                      </Link> */}
                       
-                      <hr className="my-1 border-gray-200 dark:border-gray-600" />
+                      {/* Only show divider if Profile link is visible */}
+                      {!isAdmin && <hr className="my-1 border-gray-200 dark:border-gray-600" />}
                       
                       <button
                         onClick={handleSignOut}

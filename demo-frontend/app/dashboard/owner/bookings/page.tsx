@@ -13,16 +13,16 @@ type Booking = {
     name: string;
     location: string;
     priceBase?: string;
-  };
+  } | null;
   slotId: {
     date: string;
     startHour: string;
     endHour: string;
-  };
+  } | null;
   userId: {
     name: string;
     email: string;
-  };
+  } | null;
   paymentreceived: string;
   isPaymentReceived: boolean;
   status: string;
@@ -47,10 +47,19 @@ export default function BookingsPage() {
       try {
         const response = await fetch('/api/fetch-booking');
         const data = await response.json();
-        console.log(data);
+        console.log('Raw booking data:', data);
         
         if (data.bookings) {
-          setBookings(data.bookings);
+          // Filter out bookings with missing critical data
+          const validBookings = data.bookings.filter(booking => 
+            booking && 
+            booking.slotId && 
+            booking.slotId.date && 
+            booking.turfId && 
+            booking.userId
+          );
+          
+          setBookings(validBookings);
         }
       } catch (error) {
         console.error('Error fetching bookings:', error);
@@ -171,14 +180,14 @@ export default function BookingsPage() {
     setSelectedBookingId('');
   };
 
-  // Calculate total revenue
+  // Calculate total revenue with safety checks
   const calculateTotalRevenue = () => {
     const openBookingsRevenue = bookings
-      .filter(b => !b.isPaymentReceived)
+      .filter(b => !b.isPaymentReceived && b.paymentreceived)
       .reduce((sum, b) => sum + parseFloat(b.paymentreceived || '0'), 0);
     
     const closedBookingsRevenue = bookings
-      .filter(b => b.isPaymentReceived)
+      .filter(b => b.isPaymentReceived && b.turfId?.priceBase)
       .reduce((sum, b) => sum + parseFloat(b.turfId.priceBase || '0'), 0);
     
     return openBookingsRevenue + closedBookingsRevenue;
@@ -300,7 +309,7 @@ export default function BookingsPage() {
               <div>
                 <p className="text-sm text-gray-600 dark:text-gray-400">Unique Customers</p>
                 <p className="text-2xl font-bold text-purple-600 dark:text-purple-400">
-                  {new Set(bookings.map(b => b.userId.email)).size}
+                  {new Set(bookings.filter(b => b.userId?.email).map(b => b.userId.email)).size}
                 </p>
               </div>
               <div className="w-12 h-12 bg-gradient-to-br from-purple-400 to-pink-400 rounded-full flex items-center justify-center">
@@ -310,91 +319,99 @@ export default function BookingsPage() {
           </Card>
         </motion.div>
 
-        {/* Bookings List */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2 }}
-          className="space-y-4"
-        >
-          {filteredBookings.map((booking, index) => (
-            <motion.div
-              key={booking._id}
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.1 * index }}
-            >
-              <Card className="p-6 shadow-girly dark:shadow-manly hover:shadow-lg transition-all duration-300 sparkle dark:glow">
-                <div className="flex justify-between items-start">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-4 mb-3">
-                      <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-                        {booking.turfId.name}
-                      </h3>
-                      <Badge className={`${getStatusColor(booking.status)} text-white`}>
-                        {booking.status}
-                      </Badge>
-                      <Badge className={`${booking.isPaymentReceived ? 'bg-green-500' : 'bg-yellow-500'} text-white`}>
-                        {booking.isPaymentReceived ? 'Closed' : 'Open'}
-                      </Badge>
-                    </div>
-                    
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                      <div>
-                        <p className="text-sm text-gray-500 dark:text-gray-400">Customer</p>
-                        <p className="font-medium text-gray-900 dark:text-white">{booking.userId.name}</p>
-                        <p className="text-sm text-gray-600 dark:text-gray-400">{booking.userId.email}</p>
+        {/* Loading State */}
+        {loading ? (
+          <div className="flex items-center justify-center py-12">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+            <span className="ml-3 text-gray-600">Loading bookings...</span>
+          </div>
+        ) : (
+          /* Bookings List */
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 }}
+            className="space-y-4"
+          >
+            {filteredBookings.map((booking, index) => (
+              <motion.div
+                key={booking._id}
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.1 * index }}
+              >
+                <Card className="p-6 shadow-girly dark:shadow-manly hover:shadow-lg transition-all duration-300 sparkle dark:glow">
+                  <div className="flex justify-between items-start">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-4 mb-3">
+                        <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                          {booking.turfId?.name || 'Unknown Turf'}
+                        </h3>
+                        <Badge className={`${getStatusColor(booking.status)} text-white`}>
+                          {booking.status}
+                        </Badge>
+                        <Badge className={`${booking.isPaymentReceived ? 'bg-green-500' : 'bg-yellow-500'} text-white`}>
+                          {booking.isPaymentReceived ? 'Closed' : 'Open'}
+                        </Badge>
                       </div>
                       
-                      <div>
-                        <p className="text-sm text-gray-500 dark:text-gray-400">Date & Time</p>
-                        <p className="font-medium text-gray-900 dark:text-white">
-                          {new Date(booking.slotId.date).toLocaleDateString()}
-                        </p>
-                        <p className="text-sm text-gray-600 dark:text-gray-400">
-                          {booking.slotId.startHour} - {booking.slotId.endHour}
-                        </p>
-                      </div>
-                      
-                      <div>
-                        <p className="text-sm text-gray-500 dark:text-gray-400">Payment</p>
-                        <p className="font-medium text-green-600 dark:text-green-400">
-                          ₹{booking.isPaymentReceived ? (booking.turfId.priceBase || '0') : booking.paymentreceived}
-                        </p>
-                        <p className="text-sm text-gray-600 dark:text-gray-400">
-                          {new Date(booking.createdAt).toLocaleDateString()}
-                        </p>
-                      </div>
-                    </div>
-
-                    {/* Action Buttons Section - Only show for open bookings */}
-                    {!booking.isPaymentReceived && (
-                      <div className="flex gap-3 mt-4 pt-4 border-t border-gray-200 dark:border-gray-600">
-                        <button
-                          onClick={() => handleCancelBookingClick(booking._id)}
-                          className="flex items-center gap-2 px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg transition-colors duration-200 text-sm font-medium"
-                          title="Cancel Booking"
-                        >
-                          <TrashIcon className="w-4 h-4" />
-                          Cancel Booking
-                        </button>
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div>
+                          <p className="text-sm text-gray-500 dark:text-gray-400">Customer</p>
+                          <p className="font-medium text-gray-900 dark:text-white">{booking.userId?.name || 'Unknown'}</p>
+                          <p className="text-sm text-gray-600 dark:text-gray-400">{booking.userId?.email || 'No email'}</p>
+                        </div>
                         
-                        <button
-                          onClick={() => handleCloseBooking(booking._id)}
-                          className="flex items-center gap-2 px-4 py-2 bg-green-500 hover:bg-green-600 text-white rounded-lg transition-colors duration-200 text-sm font-medium"
-                          title="Close Booking"
-                        >
-                          <XMarkIcon className="w-4 h-4" />
-                          Close Booking
-                        </button>
+                        <div>
+                          <p className="text-sm text-gray-500 dark:text-gray-400">Date & Time</p>
+                          <p className="font-medium text-gray-900 dark:text-white">
+                            {booking.slotId?.date ? new Date(booking.slotId.date).toLocaleDateString() : 'Invalid Date'}
+                          </p>
+                          <p className="text-sm text-gray-600 dark:text-gray-400">
+                            {booking.slotId?.startHour || 'N/A'} - {booking.slotId?.endHour || 'N/A'}
+                          </p>
+                        </div>
+                        
+                        <div>
+                          <p className="text-sm text-gray-500 dark:text-gray-400">Payment</p>
+                          <p className="font-medium text-green-600 dark:text-green-400">
+                            ₹{booking.isPaymentReceived ? (booking.turfId?.priceBase || '0') : booking.paymentreceived}
+                          </p>
+                          <p className="text-sm text-gray-600 dark:text-gray-400">
+                            {booking.createdAt ? new Date(booking.createdAt).toLocaleDateString() : 'Invalid Date'}
+                          </p>
+                        </div>
                       </div>
-                    )}
+
+                      {/* Action Buttons Section - Only show for open bookings */}
+                      {!booking.isPaymentReceived && (
+                        <div className="flex gap-3 mt-4 pt-4 border-t border-gray-200 dark:border-gray-600">
+                          <button
+                            onClick={() => handleCancelBookingClick(booking._id)}
+                            className="flex items-center gap-2 px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg transition-colors duration-200 text-sm font-medium"
+                            title="Cancel Booking"
+                          >
+                            <TrashIcon className="w-4 h-4" />
+                            Cancel Booking
+                          </button>
+                          
+                          <button
+                            onClick={() => handleCloseBooking(booking._id)}
+                            className="flex items-center gap-2 px-4 py-2 bg-green-500 hover:bg-green-600 text-white rounded-lg transition-colors duration-200 text-sm font-medium"
+                            title="Close Booking"
+                          >
+                            <XMarkIcon className="w-4 h-4" />
+                            Close Booking
+                          </button>
+                        </div>
+                      )}
+                    </div>
                   </div>
-                </div>
-              </Card>
-            </motion.div>
-          ))}
-        </motion.div>
+                </Card>
+              </motion.div>
+            ))}
+          </motion.div>
+        )}
 
         {/* Empty State */}
         {filteredBookings.length === 0 && !loading && (

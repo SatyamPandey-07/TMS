@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { connectDb } from '@/lib/dbConnect';
 import Booking from '@/models/Booking';
+import Slot from '@/models/Slot'; // Import Slot model
 import mongoose from 'mongoose';
 
 export async function DELETE(req: NextRequest, { params }: { params: { bookingId: string } }) {
@@ -50,21 +51,50 @@ export async function DELETE(req: NextRequest, { params }: { params: { bookingId
       }, { status: 400 });
     }
 
-    // Delete the booking
-    const deletedBooking = await Booking.findByIdAndDelete(params.bookingId);
+    // Start a transaction to ensure both operations succeed or fail together
+    const session = await mongoose.startSession();
     
-    if (!deletedBooking) {
+    try {
+      await session.withTransaction(async () => {
+        // Delete the booking
+        const deletedBooking = await Booking.findByIdAndDelete(params.bookingId).session(session);
+        
+        if (!deletedBooking) {
+          throw new Error('Failed to delete booking');
+        }
+
+        // Update the slot to mark it as available
+        const updatedSlot = await Slot.findByIdAndUpdate(
+          booking.slotId._id,
+          { isBooked: false },
+          { new: true, session }
+        );
+
+        if (!updatedSlot) {
+          throw new Error('Failed to update slot availability');
+        }
+
+        console.log('Slot updated:', {
+          slotId: updatedSlot._id,
+          isbooked: updatedSlot.isbooked
+        });
+      });
+
+      console.log('Booking cancelled successfully:', params.bookingId);
+
       return NextResponse.json({ 
-        message: 'Failed to cancel booking' 
+        message: 'Booking cancelled successfully',
+        cancelledBookingId: params.bookingId
+      });
+
+    } catch (transactionError) {
+      console.error('Transaction failed:', transactionError);
+      return NextResponse.json({ 
+        message: 'Failed to cancel booking and update slot' 
       }, { status: 500 });
+    } finally {
+      await session.endSession();
     }
-
-    console.log('Booking cancelled successfully:', params.bookingId);
-
-    return NextResponse.json({ 
-      message: 'Booking cancelled successfully',
-      cancelledBookingId: params.bookingId
-    });
 
   } catch (error) {
     console.error('Error cancelling booking:', error);
